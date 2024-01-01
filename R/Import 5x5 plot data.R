@@ -3,12 +3,14 @@
 # First, build a way to read in one of these sheets before tackling all of them
 library(readxl)
 library(janitor)
+library(openxlsx)
+library(lubridate)
 library(tidyverse)
 library(tidylog)
 
 data = read_excel("raw_data/fixed area plot (permanent plot) data/Plot 01.xlsx",
                   sheet = "5 x 5 subplots", skip = 1,
-                  range = cell_cols("A:J")) |>
+                  range = cell_cols("A:J"), col_types = ) |>
   row_to_names(row_number = 1) |>
   clean_names(case = "lower_camel") |>
   drop_na(plot) |>
@@ -27,7 +29,9 @@ data = read_excel("raw_data/fixed area plot (permanent plot) data/Plot 01.xlsx",
            abundance == "<50" ~ "50",
            abundance == "<500" ~ "500",
            TRUE ~ abundance
-         )) |>
+         ),
+         # Convert date to human readable
+         date = openxlsx::convertToDate(date)) |>
   # Convert relevant columns to numeric
   mutate_at(c("midlineDistance", "sample", "coverPercent", "abundance",
               "cwdLengthM"), as.numeric)
