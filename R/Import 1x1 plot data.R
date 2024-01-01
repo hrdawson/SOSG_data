@@ -1,7 +1,6 @@
 # First, build a way to read in one of these sheets before tackling all of them
 
 # Cover data ----
-# This seems like
 # Need to build the headers separately
 cover.data.header = read_excel("raw_data/fixed area plot (permanent plot) data/Plot 01.xlsx",
                           sheet = "1 x 1 subplots", skip = 1,
@@ -29,7 +28,12 @@ cover.data = read_excel("raw_data/fixed area plot (permanent plot) data/Plot 01.
   # Add in correct headers and assign
   add_row(cover.data.header, .before = 1) |>
   row_to_names(row_number = 1) |>
-  clean_names(case = "lower_camel")
+  clean_names(case = "lower_camel") |>
   # Clean the data
   # Pivot longer so we can work with all at once
-  pivot_longer(Mallee:)
+  pivot_longer(cols = mallee:bareSoil, names_to = "typeCover", values_to = "percent") |>
+  # Replace non-numeric values
+  mutate(percent = as.numeric(str_replace(percent, "<5", "0.1")),
+         percent = replace_na(percent, 0),
+         # Convert date to human readable
+         date = openxlsx::convertToDate(date))
