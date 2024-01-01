@@ -8,7 +8,7 @@ library(lubridate)
 library(tidyverse)
 library(tidylog)
 
-data = read_excel("raw_data/fixed area plot (permanent plot) data/Plot 01.xlsx",
+subplot.data = read_excel("raw_data/fixed area plot (permanent plot) data/Plot 01.xlsx",
                   sheet = "5 x 5 subplots", skip = 1,
                   range = cell_cols("A:J"), col_types = ) |>
   row_to_names(row_number = 1) |>
