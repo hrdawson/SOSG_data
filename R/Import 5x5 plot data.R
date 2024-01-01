@@ -27,4 +27,7 @@ data = read_excel("raw_data/fixed area plot (permanent plot) data/Plot 01.xlsx",
            abundance == "<50" ~ "50",
            abundance == "<500" ~ "500",
            TRUE ~ abundance
-         ))
+         )) |>
+  # Convert relevant columns to numeric
+  mutate_at(c("midlineDistance", "sample", "coverPercent", "abundance",
+              "cwdLengthM"), as.numeric)
