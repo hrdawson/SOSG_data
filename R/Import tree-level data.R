@@ -76,7 +76,14 @@ tree.data = tempTrees |>
   fill(plot, .direction = "down") |>
   # Change numbers to letters
   one_to_letter(c(e:n)) |>
-  rename(canopy = values)
+  rename(canopy = values) |>
+  one_to_letter(c(u:a)) |>
+  rename(epicormics = values, p = p_2, a = a_2) |>
+  one_to_letter(c(h:a)) |>
+  rename(resprouts = values) |>
+  one_to_letter(c(fh:dN)) |>
+  rename(woodBorers = values)
+
 
   pivot_longer(e:n, names_to = "temp", values_to = "canopy") |>
   mutate(canopy = case_when(
