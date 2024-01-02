@@ -10,6 +10,7 @@ tempTrees = map_dfr(filesCover, read_xlsx, sheet = "Tree-level", skip = 1,
 
 # Clean data ----
 # Function to replace binaries with letters
+# This function exists thanks to https://jonthegeek.com/2018/06/04/writing-custom-tidyverse-functions/
 one_to_letter = function(.data, ...) {
   .data |>
   pivot_longer(cols = ...,
@@ -73,7 +74,10 @@ tree.data = tempTrees |>
   # Some data entry was not completed
   # THIS STEP IS DANGEROUS, check here first for errors
   fill(plot, .direction = "down") |>
-  # Work with the data that should have one value per plot
+  # Change numbers to letters
+  one_to_letter(c(e:n)) |>
+  rename(canopy = values)
+
   pivot_longer(e:n, names_to = "temp", values_to = "canopy") |>
   mutate(canopy = case_when(
     canopy == 1 ~ temp,
