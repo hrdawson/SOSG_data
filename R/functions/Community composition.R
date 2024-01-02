@@ -50,3 +50,4 @@ ggplot(composition.canopy,
   scale_color_viridis(direction = -1) +
   theme_bw()
 
+ggsave("visualizations/2024.01.03_canopyClass_Shannon.png", width = 10, height = 4, units = "in")
