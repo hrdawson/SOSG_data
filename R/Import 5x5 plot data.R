@@ -12,6 +12,7 @@ filesSubplot <- dir(path = "raw_data/fixed area plot (permanent plot) data", pat
                     full.names = TRUE, recursive = TRUE)
 
 # Read in data
+# If you get an error that `~$Plot **.xlsx` cannot be opened, close all Excel documents and try both objects again
 tempSubplot = map_dfr(filesSubplot, read_xlsx, sheet = "5 x 5 subplots",
                       range = cell_cols("A:K"))
 
@@ -57,6 +58,46 @@ subplot.data = tempSubplot |>
          date = openxlsx::convertToDate(date)) |>
   # Convert relevant columns to numeric
   mutate_at(c("midlineDistance", "sample", "coverPercent", "abundance",
-              "cwdLengthM"), as.numeric)
+              "cwdLengthM"), as.numeric) |>
+  # Disambiguate species names
+  mutate(species = case_when(
+    species == "Acriphylla simplicifolia" ~ "Aciphylla simplicifolia",
+    species %in% c("Asperula gunii", "Asperulla gunii", "Asperulla gunnii") ~ "Asperula gunnii",
+    species == "Acrothamnus maccrali" ~ "Acrothamnus maccraei",
+    species == "Backea gunniana" ~ "Baeckea gunniana",
+    species %in% c("Celmesia tomantella", "Celmisia tomentella", "Clemisia tomentella") ~ "Celmisia tomentella",
+    species == "Curex" ~ "Carex",
+    species == "Crespidia" ~ "Craspedia",
+    species == "Empadisma minus" ~ "Empodisma minus",
+    species == "Epachris?" ~ "Epacris?",
+    species == "Grevillea australia" ~ "Grevillea australis",
+    species == "Hovea montata" ~ "Hovea montana",
+    species %in% c("Oriomyrrhis eriopoda", "Oreomyrrhis eriopoda", "Oreomyrrhis eriopoda") ~ "Oreomyrrhis eriopoda",
+    species %in% c("Ozothamnus secandifolius", "Ozothamnus secundiflora", "Ozothamnus secundiflorus") ~ "Ozothamnus secundiflorus",
+    species == "Orchid 1" ~ "Unknown orchid 1",
+    species == "Pterostylis (orchid)" ~ "Pterostylis",
+    species == "Pimelea lingustrina" ~ "Pimelea ligustrina",
+    species == "Pimelia axiflora" ~ "Pimelea axiflora",
+    species == "Poa ensiformus" ~ "Poa ensiformis",
+    species == "Poa siebriana" ~ "Poa sieberiana",
+    species == "Podocarpus lawrenci" ~ "Podocarpus lawrencei",
+    species == "Polystichum prolierum" ~ "Polystichum proliferum",
+    species == "Richea continentus" ~ "Richea continentis",
+    species == "Senecio gunii" ~ "Senecio gunnii",
+    species == "Stelaria pungens" ~ "Stellaria pungens",
+    species == "Tasmania xerophila" ~ "Tasmannia xerophila",
+    species == "Unknown pimelea"~ "Pimelea",
+    species == "Unknown Orchid (Caladenia)" ~ "Caladenia",
+    species %in% c("Viola bentonicifolia", "Viola betiusefola", "Viola betonicfolia", "Viola betonicifolia") ~ "Viola betonicifolia",
+    TRUE ~ species
+  ),
+  species = str_replace(species, " sp.", ""),
+  species = str_replace(species, "Oleria", "Olearia"),
+  species = str_replace(species, "Celmecia", "Celmisia"),
+  species = str_replace(species, "Celmesia", "Celmisia"),
+  species = str_replace(species, "uk ", "Unknown "),
+  species = str_to_sentence(trimws(species)))
 
-# write.csv(subplot.data, "clean_data/5x5 subplot data.csv")
+table(subplot.data$species)
+
+write.csv(subplot.data, "clean_data/5x5 subplot data.csv")
