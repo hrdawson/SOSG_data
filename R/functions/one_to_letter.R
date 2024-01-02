@@ -14,6 +14,20 @@ one_to_letter = function(.data, ...) {
     distinct()
 }
 
+one_to_letter_meta = function(.data, ...) {
+  .data |>
+    pivot_longer(cols = ...,
+                 names_to = "temp", values_to = "values") |>
+    mutate(values = case_when(
+      values == 1 ~ temp,
+      TRUE ~ NA
+    )) |>
+    select(-c(temp)) |>
+    group_by(plot) |>
+    fill("values", .direction = "downup") |>
+    distinct()
+}
+
 # Test code for the function
 # subset = tree.data |>
 #   slice_head(n = 10) |>
