@@ -1,4 +1,9 @@
 # Import tree-level data
+library(tidyverse)
+library(tidylog)
+
+source("R/functions/one_to_letter.R")
+
 # Read in files ----
 # Make file list
 filesTrees <- dir(path = "raw_data/fixed area plot (permanent plot) data", pattern = ".xlsx",
@@ -9,41 +14,6 @@ tempTrees = map_dfr(filesCover, read_xlsx, sheet = "Tree-level", skip = 1,
                     col_names = FALSE)
 
 # Clean data ----
-# Function to replace binaries with letters
-# This function exists thanks to https://jonthegeek.com/2018/06/04/writing-custom-tidyverse-functions/
-one_to_letter = function(.data, ...) {
-  .data |>
-  pivot_longer(cols = ...,
-               names_to = "temp", values_to = "values") |>
-    mutate(values = case_when(
-      values == 1 ~ temp,
-      TRUE ~ NA
-    )) |>
-    select(-c(temp)) |>
-    group_by(plot, stem, tree) |>
-    fill("values", .direction = "downup") |>
-    distinct()
-}
-
-# Test code for the function
-# subset = tree.data |>
-#   slice_head(n = 10) |>
-#   one_to_letter(c(e:n))
-#
-# subset = tree.data |>
-#   slice_head(n = 10) |>
-# pivot_longer(e:n,
-#              names_to = "temp", values_to = "value") |>
-#   mutate(value = case_when(
-#     value == 1 ~ temp,
-#     TRUE ~ NA
-#   )) |>
-#   rename(valuesTo = value) |>
-#   select(-temp) |>
-#   group_by(plot, tree, stem) |>
-#   fill("valuesTo", .direction = "downup") |>
-#   distinct()
-
 # Need to build the headers separately
 tree.data.header = tempTrees |>
   # Select just the headers
