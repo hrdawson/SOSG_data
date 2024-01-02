@@ -37,8 +37,8 @@ meta.data = tempMeta |>
   filter(assessor1 != "MTB") |>
   # Convert binaries to letters
   # Use new function that doesn't dangerously replace all 1s
-  one_to_letter_meta(c(c:f)) |> rename(landform = values) |>
-  one_to_letter_meta(c(x:i)) |> rename(inclination = values)
+  one_to_letter_plot(c(c:f)) |> rename(landform = values) |>
+  one_to_letter_plot(c(x:i)) |> rename(inclination = values)
 
 # meta.data = tempMeta |>
 #   # Remove the existing header rows
