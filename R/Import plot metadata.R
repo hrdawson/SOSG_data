@@ -53,3 +53,5 @@ meta.data = tempMeta |>
   fill(inclination, .direction = "downup") |>
   ungroup() |>
   distinct()
+
+# write.csv(meta.data, "clean_data/Plot metadata.csv")
