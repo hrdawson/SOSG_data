@@ -5,6 +5,17 @@ library(openxlsx)
 library(lubridate)
 library(tidyverse)
 library(tidylog)
+
+# now to apply across multiple files
+## Read in files ----
+# Make file list
+filesSubplot <- dir(path = "raw_data/fixed area plot (permanent plot) data", pattern = ".xlsx",
+                    full.names = TRUE, recursive = TRUE)
+
+# Read in data
+tempSubplot = map_dfr(filesSubplot, read_xlsx, sheet = "5 x 5 subplots",
+                      range = cell_cols("A:J"))
+
 # First, build a way to read in one of these sheets before tackling all of them
 
 subplot.data = read_excel("raw_data/fixed area plot (permanent plot) data/Plot 01.xlsx",
