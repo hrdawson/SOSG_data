@@ -1,3 +1,13 @@
+# Read in files ----
+# Make file list
+filesCover <- dir(path = "raw_data/fixed area plot (permanent plot) data", pattern = ".xlsx",
+                    full.names = TRUE, recursive = TRUE)
+
+# Read in data
+tempCover = map_dfr(filesCover, read_xlsx, sheet = "1 x 1 subplots", skip = 1,
+                      col_names = FALSE)
+
+
 # First, build a way to read in one of these sheets before tackling all of them
 
 # Cover data ----
