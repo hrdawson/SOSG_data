@@ -54,3 +54,5 @@ tree.data = tempTrees |>
   rename(frass = fh) |>
   one_to_letter_stem(c(u:a)) |> rename(epicormics = values, p = p_2, a = a_2) |>
   one_to_letter_stem(c(h:a)) |> rename(resprouts = values)
+
+# write.csv(tree.data, "clean_data/Tree data.csv")
