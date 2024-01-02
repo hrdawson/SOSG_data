@@ -26,6 +26,7 @@ subplot.data = tempSubplot |>
   # Now we can group by plot
   group_by(plot) |>
   fill(assessor1:date, .direction = "down") |>
+  ungroup() |>
   # Filter out extraneous row names
   filter(plot != "Plot") |>
   # Remove filler data
