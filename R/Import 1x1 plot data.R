@@ -19,7 +19,7 @@ tempCover = map_dfr(filesCover, read_xlsx, sheet = "1 x 1 subplots", skip = 1,
 # Need to build the headers separately
 cover.data.header = tempCover |>
   # Select just the cover columns + meta columns
-  select('...1':'...5', '...27':'...37') |>
+  select('...1':'...5', '...27':'...37', '...38') |>
   # Select just the headers
   slice_head(n = 3) |>
   # Fill in the NA cells
@@ -30,7 +30,7 @@ cover.data.header = tempCover |>
 # Import the data
 cover.data = tempCover |>
   # Select just the cover columns + meta columns
-  select('...1':'...5', '...27':'...37') |>
+  select('...1':'...5', '...27':'...37', '...38') |>
   # Remove the existing header rows
   slice(4:n()) |>
   # Add in correct headers and assign
@@ -67,7 +67,7 @@ cover.data = tempCover |>
 # Need to build the headers separately ----
 scat.data.header = tempCover |>
   # Select just the cover columns + meta columns
-  select('...1':'...23') |>
+  select('...1':'...23', '...38') |>
   # Select just the headers
   slice_head(n = 3) |>
   # Fill in the NA cells
@@ -78,7 +78,7 @@ scat.data.header = tempCover |>
 ## Clean the data ----
 scat.data = tempCover |>
   # Select just the cover columns + meta columns
-  select('...1':'...23') |>
+  select('...1':'...23', '...38') |>
   # Remove the existing header rows
   slice(4:n()) |>
   # Add in correct headers and assign
