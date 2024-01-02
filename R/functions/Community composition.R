@@ -51,3 +51,14 @@ ggplot(composition.canopy,
   theme_bw()
 
 ggsave("visualizations/2024.01.03_canopyClass_Shannon.png", width = 10, height = 4, units = "in")
+
+# Does shannon scale with DBH?
+ggplot(composition.canopy, aes(y = dbh,
+                               x = plot,
+                               fill = mean.H, color = mean.H)) +
+         geom_violin(alpha = 0.7) +
+         scale_fill_viridis(direction = -1) +
+         scale_color_viridis(direction = -1) +
+  theme_bw()
+
+ggsave("visualizations/2024.01.03_DBH_Shannon.png", width = 10, height = 4, units = "in")

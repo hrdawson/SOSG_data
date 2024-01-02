@@ -1,5 +1,5 @@
 canopy.data = read.csv("clean_data/Tree data.csv") |>
-  select(plot:number, heightM, flag, canopy) |>
+  select(plot:number, heightM, flag, dbh, canopy) |>
   # Assign numerical value to canopy
   mutate(canopy.number = case_when(
     canopy == "e" ~ 5,
@@ -39,3 +39,8 @@ ggplot(canopy.data.classed,
   theme_bw()
 
 ggsave("visualizations/2024.01.03_canopyClass_meanCanopyClass.png", width = 10, height = 4, units = "in")
+
+# Does canopy health scale with DBH?
+ggplot(canopy.data.classed, aes(y = dbh, x = as.character(canopy.number))) +
+  geom_violin() +
+  theme_bw()
