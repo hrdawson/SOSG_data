@@ -31,6 +31,7 @@ meta.data = tempMeta |>
   filter(plot != "Plot") |>
   filter(assessor1 != "MTB") |>
   # Convert binaries to letters
+  # BEWARE: ALL `1` VALUES WILL BE REPLACED
   # This code alters the plot numbers as well, so temporarily stash them in rownames
   column_to_rownames(var = "plot") |>
   # It also messes with the waypoint and photopoint column, so dropping them to avoid confusion
@@ -42,21 +43,13 @@ meta.data = tempMeta |>
   # Pivot to make this sensible
   pivot_longer(c:f, names_to = "temp", values_to = "landform") |>
   drop_na(landform) |>
-  select(-temp)
+  select(-temp) |>
   pivot_longer(x:i, names_to = "temp", values_to = "inclination") |>
   select(-temp) |>
-  distinct()
-
-  # Convert binaries to letters
-  pivot_longer(cols = c:f, names_to = "LF", values_to = "LF.value") |>
-  pivot_longer(cols = x:i, names_to = "In", values_to = "In.value") |>
-  # Replace with letters
-  mutate(landform = case_when(
-    LF.value == 1 ~ LF
-  ),
-  inclination = case_when(
-    In.value == 1 ~ In
-  )) |>
-  # Drop columns no longer needed
-  select(-c(LF, LF.value, In, In.value)) |>
+  distinct() |>
+  # Work around to deal with inability to drop NAs
+  # (Dropping them removes useful landform data)
+  group_by(plot) |>
+  fill(inclination, .direction = "downup") |>
+  ungroup() |>
   distinct()
