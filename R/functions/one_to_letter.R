@@ -1,6 +1,6 @@
 # Function to replace binaries with letters
 # This function exists thanks to https://jonthegeek.com/2018/06/04/writing-custom-tidyverse-functions/
-one_to_letter = function(.data, ...) {
+one_to_letter_stem = function(.data, ...) {
   .data |>
     pivot_longer(cols = ...,
                  names_to = "temp", values_to = "values") |>
@@ -14,7 +14,7 @@ one_to_letter = function(.data, ...) {
     distinct()
 }
 
-one_to_letter_meta = function(.data, ...) {
+one_to_letter_plot = function(.data, ...) {
   .data |>
     pivot_longer(cols = ...,
                  names_to = "temp", values_to = "values") |>
