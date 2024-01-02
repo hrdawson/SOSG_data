@@ -13,7 +13,7 @@ filesSubplot <- dir(path = "raw_data/fixed area plot (permanent plot) data", pat
 
 # Read in data
 tempSubplot = map_dfr(filesSubplot, read_xlsx, sheet = "5 x 5 subplots",
-                      range = cell_cols("A:J"))
+                      range = cell_cols("A:K"))
 
 # Clean data ----
 subplot.data = tempSubplot |>
@@ -30,7 +30,7 @@ subplot.data = tempSubplot |>
   # Filter out extraneous row names
   filter(plot != "Plot") |>
   # Remove filler data
-  filter(assessor1 != "MTB") |>
+  filter(assessor1 != assessor2) |>
   drop_na(species) |>
   # Convert non-numeric values to numeric
   # For less than 5% cover, replace value with trace amount number
