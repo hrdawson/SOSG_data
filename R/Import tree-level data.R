@@ -75,26 +75,12 @@ tree.data = tempTrees |>
   # THIS STEP IS DANGEROUS, check here first for errors
   fill(plot, .direction = "down") |>
   mutate_at(c("plot", "tree", "stem"), as.numeric) |>
-  distinct()
+  distinct() |>
   # Change numbers to letters
-  one_to_letter(c(e:n)) |>
-  rename(canopy = values) |>
-  one_to_letter(c(u:a)) |>
-  rename(epicormics = values, p = p_2, a = a_2) |>
-  one_to_letter(c(h:a)) |>
-  rename(resprouts = values) |>
-  one_to_letter(c(fh:dN)) |>
-  rename(woodBorers = values)
-
-tree.data.canopy = tree.data |>
-  select(-c(woodBorers, epicormics, resprouts)) |>
-  distinct()
-
-
-  pivot_longer(e:n, names_to = "temp", values_to = "canopy") |>
-  mutate(canopy = case_when(
-    canopy == 1 ~ temp,
-    TRUE ~ NA
-  )) |>
-  select(-temp) |>
-  distinct()
+  one_to_letter(c(e:n)) |> rename(canopy = values) |>
+  one_to_letter(c(pU:pA)) |> rename(barkDamage = values) |>
+  one_to_letter(c(gU:gA)) |> rename(galleries = values) |>
+  one_to_letter(c(dB:dN)) |> rename(stem.dead = values) |>
+  rename(frass = fh) |>
+  one_to_letter(c(u:a)) |> rename(epicormics = values, p = p_2, a = a_2) |>
+  one_to_letter(c(h:a)) |> rename(resprouts = values)
