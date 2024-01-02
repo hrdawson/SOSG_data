@@ -20,7 +20,7 @@ one_to_letter = function(.data, ...) {
       TRUE ~ NA
     )) |>
     select(-c(temp)) |>
-    group_by(plot) |>
+    group_by(plot, stem, tree) |>
     fill("values", .direction = "downup") |>
     distinct()
 }
@@ -40,7 +40,7 @@ one_to_letter = function(.data, ...) {
 #   )) |>
 #   rename(valuesTo = value) |>
 #   select(-temp) |>
-#   group_by(plot) |>
+#   group_by(plot, tree, stem) |>
 #   fill("valuesTo", .direction = "downup") |>
 #   distinct()
 
@@ -66,7 +66,7 @@ tree.data = tempTrees |>
     plot == 1 & tree == 2 & dbh == 110.2 ~ "example",
     plot == "Plot" ~ "dud",
     pres == "Pres" ~ "dud",
-    spp == NA ~ "dud",
+    is.na(spp) ~ "dud",
     TRUE ~ "okay"
   )) |>
   # Remember that filters drop NAs
@@ -74,6 +74,8 @@ tree.data = tempTrees |>
   # Some data entry was not completed
   # THIS STEP IS DANGEROUS, check here first for errors
   fill(plot, .direction = "down") |>
+  mutate_at(c("plot", "tree", "stem"), as.numeric) |>
+  distinct()
   # Change numbers to letters
   one_to_letter(c(e:n)) |>
   rename(canopy = values) |>
@@ -83,6 +85,10 @@ tree.data = tempTrees |>
   rename(resprouts = values) |>
   one_to_letter(c(fh:dN)) |>
   rename(woodBorers = values)
+
+tree.data.canopy = tree.data |>
+  select(-c(woodBorers, epicormics, resprouts)) |>
+  distinct()
 
 
   pivot_longer(e:n, names_to = "temp", values_to = "canopy") |>
