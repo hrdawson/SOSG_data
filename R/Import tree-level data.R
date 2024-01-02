@@ -9,3 +9,33 @@ tempTrees = map_dfr(filesCover, read_xlsx, sheet = "Tree-level", skip = 1,
                     col_names = FALSE)
 
 # Clean data ----
+# Need to build the headers separately
+tree.data.header = tempTrees |>
+  # Select just the headers
+  slice_head(n = 2) |>
+  # Fill in the NA cells
+  fill('...1':'...37', .direction = "down") |>
+  # Make just the one row of headers
+  slice_tail(n = 1)
+
+tree.data = tempTrees |>
+  # Remove the existing header rows
+  slice(3:n()) |>
+  # Add in correct headers and assign
+  add_row(tree.data.header, .before = 1) |>
+  row_to_names(row_number = 1) |>
+  clean_names(case = "lower_camel") |>
+  # Clean out fillers
+  mutate(flag = case_when(
+    plot == 1 & tree == 1 & dbh == 21.3 ~ "example",
+    plot == 1 & tree == 2 & dbh == 110.2 ~ "example",
+    plot == "Plot" ~ "dud",
+    pres == "Pres" ~ "dud",
+    spp == NA ~ "dud",
+    TRUE ~ "okay"
+  )) |>
+  # Remember that filters drop NAs
+  filter(flag == "okay") |>
+  # Some data entry was not completed
+  # THIS STEP IS DANGEROUS, check here first for errors
+  fill(plot, .direction = "down")
