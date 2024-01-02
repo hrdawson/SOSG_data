@@ -23,10 +23,7 @@ cover.data.header = tempCover |>
   slice_tail(n = 1)
 
 # Import the data
-cover.data = read_excel("raw_data/fixed area plot (permanent plot) data/Plot 01.xlsx",
-                               sheet = "1 x 1 subplots", skip = 1,
-                               #Going to get messy to select just the columns I need
-                               col_names = FALSE) |>
+cover.data = tempCover |>
   # Select just the cover columns + meta columns
   select('...1':'...5', '...27':'...37') |>
   # Remove the existing header rows
@@ -36,10 +33,27 @@ cover.data = read_excel("raw_data/fixed area plot (permanent plot) data/Plot 01.
   row_to_names(row_number = 1) |>
   clean_names(case = "lower_camel") |>
   # Clean the data
+  # Some data entry was not completed
+  # THIS STEP IS DANGEROUS, check here first for errors
+  fill(plot, .direction = "down") |>
+  # Now we can group by plot
+  group_by(plot) |>
+  fill(assessor1:date, .direction = "down") |>
+  ungroup() |>
+  # Filter out extraneous row names
+  filter(plot != "Plot") |>
   # Pivot longer so we can work with all at once
   pivot_longer(cols = mallee:bareSoil, names_to = "typeCover", values_to = "percent") |>
   # Replace non-numeric values
-  mutate(percent = as.numeric(str_replace(percent, "<5", "0.1")),
+  mutate(percent = case_when(
+    percent == "<5" ~ "0.1",
+    percent == "<10" ~ "0.1",
+    percent == ">5" ~ "0.1",
+    TRUE ~ percent
+  ),
+  percent = as.numeric(percent),
          percent = replace_na(percent, 0),
          # Convert date to human readable
          date = openxlsx::convertToDate(date))
+
+# write.csv(cover.data, "clean_data/1x1 cover data.csv")
