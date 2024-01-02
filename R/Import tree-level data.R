@@ -47,10 +47,10 @@ tree.data = tempTrees |>
   mutate_at(c("plot", "tree", "stem"), as.numeric) |>
   distinct() |>
   # Change numbers to letters
-  one_to_letter(c(e:n)) |> rename(canopy = values) |>
-  one_to_letter(c(pU:pA)) |> rename(barkDamage = values) |>
-  one_to_letter(c(gU:gA)) |> rename(galleries = values) |>
-  one_to_letter(c(dB:dN)) |> rename(stem.dead = values) |>
+  one_to_letter_stem(c(e:n)) |> rename(canopy = values) |>
+  one_to_letter_stem(c(pU:pA)) |> rename(barkDamage = values) |>
+  one_to_letter_stem(c(gU:gA)) |> rename(galleries = values) |>
+  one_to_letter_stem(c(dB:dN)) |> rename(stem.dead = values) |>
   rename(frass = fh) |>
-  one_to_letter(c(u:a)) |> rename(epicormics = values, p = p_2, a = a_2) |>
-  one_to_letter(c(h:a)) |> rename(resprouts = values)
+  one_to_letter_stem(c(u:a)) |> rename(epicormics = values, p = p_2, a = a_2) |>
+  one_to_letter_stem(c(h:a)) |> rename(resprouts = values)
