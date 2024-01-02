@@ -9,6 +9,39 @@ tempTrees = map_dfr(filesCover, read_xlsx, sheet = "Tree-level", skip = 1,
                     col_names = FALSE)
 
 # Clean data ----
+# Function to replace binaries with letters
+one_to_letter = function(.data, valuesTo, ...) {
+  .data |>
+  pivot_longer(cols = ...,
+               names_to = "temp", values_to = "value") |>
+    mutate(placeholder = case_when(
+      value == 1 ~ temp,
+      TRUE ~ NA
+    )) |>
+    rename(valuesTo = placeholder) |>
+    select(-c(temp, value)) |>
+    group_by(plot) |>
+    fill(valuesTo, .direction = "downup") |>
+    distinct()
+}
+
+subset = tree.data |>
+  slice_head(n = 10) |>
+  one_to_letter("canopy", c(e:n))
+
+subset = tree.data |>
+  slice_head(n = 10) |>
+pivot_longer(e:n,
+             names_to = "temp", values_to = "canopy") |>
+  mutate(canopy = case_when(
+    canopy == 1 ~ temp,
+    TRUE ~ NA
+  )) |>
+  select(-temp) |>
+  group_by(plot) |>
+  fill("canopy", .direction = "downup") |>
+  distinct()
+
 # Need to build the headers separately
 tree.data.header = tempTrees |>
   # Select just the headers
@@ -38,4 +71,12 @@ tree.data = tempTrees |>
   filter(flag == "okay") |>
   # Some data entry was not completed
   # THIS STEP IS DANGEROUS, check here first for errors
-  fill(plot, .direction = "down")
+  fill(plot, .direction = "down") |>
+  # Work with the data that should have one value per plot
+  pivot_longer(e:n, names_to = "temp", values_to = "canopy") |>
+  mutate(canopy = case_when(
+    canopy == 1 ~ temp,
+    TRUE ~ NA
+  )) |>
+  select(-temp) |>
+  distinct()
