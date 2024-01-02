@@ -10,37 +10,38 @@ tempTrees = map_dfr(filesCover, read_xlsx, sheet = "Tree-level", skip = 1,
 
 # Clean data ----
 # Function to replace binaries with letters
-one_to_letter = function(.data, valuesTo, ...) {
+one_to_letter = function(.data, ...) {
   .data |>
   pivot_longer(cols = ...,
-               names_to = "temp", values_to = "value") |>
-    mutate(placeholder = case_when(
-      value == 1 ~ temp,
+               names_to = "temp", values_to = "values") |>
+    mutate(values = case_when(
+      values == 1 ~ temp,
       TRUE ~ NA
     )) |>
-    rename(valuesTo = placeholder) |>
-    select(-c(temp, value)) |>
+    select(-c(temp)) |>
     group_by(plot) |>
-    fill(valuesTo, .direction = "downup") |>
+    fill("values", .direction = "downup") |>
     distinct()
 }
 
-subset = tree.data |>
-  slice_head(n = 10) |>
-  one_to_letter("canopy", c(e:n))
-
-subset = tree.data |>
-  slice_head(n = 10) |>
-pivot_longer(e:n,
-             names_to = "temp", values_to = "canopy") |>
-  mutate(canopy = case_when(
-    canopy == 1 ~ temp,
-    TRUE ~ NA
-  )) |>
-  select(-temp) |>
-  group_by(plot) |>
-  fill("canopy", .direction = "downup") |>
-  distinct()
+# Test code for the function
+# subset = tree.data |>
+#   slice_head(n = 10) |>
+#   one_to_letter(c(e:n))
+#
+# subset = tree.data |>
+#   slice_head(n = 10) |>
+# pivot_longer(e:n,
+#              names_to = "temp", values_to = "value") |>
+#   mutate(value = case_when(
+#     value == 1 ~ temp,
+#     TRUE ~ NA
+#   )) |>
+#   rename(valuesTo = value) |>
+#   select(-temp) |>
+#   group_by(plot) |>
+#   fill("valuesTo", .direction = "downup") |>
+#   distinct()
 
 # Need to build the headers separately
 tree.data.header = tempTrees |>
