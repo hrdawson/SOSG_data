@@ -12,11 +12,7 @@ tempCover = map_dfr(filesCover, read_xlsx, sheet = "1 x 1 subplots", skip = 1,
 
 # Cover data ----
 # Need to build the headers separately
-cover.data.header = read_excel("raw_data/fixed area plot (permanent plot) data/Plot 01.xlsx",
-                          sheet = "1 x 1 subplots", skip = 1,
-                        #Going to get messy to select just the columns I need
-                        col_names = FALSE
-                        ) |>
+cover.data.header = tempCover |>
   # Select just the cover columns + meta columns
   select('...1':'...5', '...27':'...37') |>
   # Select just the headers
