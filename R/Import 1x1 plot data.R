@@ -100,4 +100,10 @@ scat.data = tempCover |>
   one_to_letter_plot(c(f_3:a_3)) |> rename(leporidae = values) |>
   one_to_letter_plot(c(f_4:a_4)) |> rename(suidae = values) |>
   one_to_letter_plot(c(f_5:a_5)) |> rename(macropodidae = values) |>
-  one_to_letter_plot(c(f_6:a_6)) |> rename(vombatidae = values)
+  one_to_letter_plot(c(f_6:a_6)) |> rename(vombatidae = values) |>
+  # Long form, at least to correct the naming of the variables
+  # I cannot get mutate_at and gsub to work across columns
+  pivot_longer(equidae:vombatidae, names_to = "family", values_to = "presence") |>
+  mutate(presence = str_remove(presence, "_.*"))
+
+# write.csv(scat.data, "clean_data/1x1 scat data.csv")
