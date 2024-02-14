@@ -47,7 +47,8 @@ transect.data = tempTransects |>
   one_to_letter_transect(c(u:a)) |> rename(epicormics = values, p = p_2, a = a_2) |>
   one_to_letter_transect(c(h:a)) |> rename(resprouts = values) |>
   # Rename columns not in tree data
-  rename(basal.sweep.baf = baf, basal.sweep.count = count)
+  rename(basal.sweep.baf = baf, basal.sweep.count = count,
+         transectNr = tsct)
 
 # write.csv(transect.data, "clean_data/transect tree data.csv")
 
