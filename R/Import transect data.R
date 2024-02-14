@@ -48,7 +48,9 @@ transect.data = tempTransects |>
   one_to_letter_transect(c(h:a)) |> rename(resprouts = values) |>
   # Rename columns not in tree data
   rename(basal.sweep.baf = baf, basal.sweep.count = count,
-         transectNr = tsct)
+         transectNr = tsct) |>
+  # Remove erroneous entries
+  drop_na(tree)
 
 # write.csv(transect.data, "clean_data/transect tree data.csv")
 
