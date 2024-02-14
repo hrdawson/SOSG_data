@@ -1,8 +1,4 @@
-#Calculate basal area
-library(fgeo.analyze)
-
-x = 6.2
-
+#Calculate basal area for permanent plots ----
 basal.area.fn <- function(x){ (pi*(x)^2)/40000 } # calculate basal area in m^2
 
 tree.data.basalArea = read.csv("clean_data/Tree data.csv") |>
@@ -292,3 +288,74 @@ ggplot(tree.data.canopy, aes(x = tree.canopy, fill = as.factor(tree.beetle))) +
   theme_bw()
 
 ggsave("visualizations/2024.02.14_BeetlesCanopyFreq.png", width = 10, height = 5, units = "in")
+
+# Calculate classes for Sabina's transects ----
+# basal area function is defined at the head of this script
+transect.data.basalArea = read.csv("clean_data/transect tree data.csv") |>
+  select(transectNr:stem, dbh) |>
+  mutate(stemID = paste0(transectNr, ".", elevation, ".", tree, ".", stem)) |>
+  select(stemID, dbh) |>
+  group_by(stemID) |>
+  mutate(basal.area = basal.area.fn(dbh))
+
+transect.data.canopy = read.csv("clean_data/transect tree data.csv") |>
+  select(transectNr:stem, dbh, canopy, galleries, frass, barkDamage) |>
+  # Assign numerical value to canopy
+  mutate(canopy.number = case_when(
+    canopy == "e" ~ 5,
+    canopy == "g" ~ 4,
+    canopy == "f" ~ 3,
+    canopy == "p" ~ 2,
+    canopy == "n" ~ 1
+  )) |>
+  # Beetle damage
+  rename(puckering = barkDamage) |>
+  # Turn binary
+  mutate(frass = as.numeric(replace_na(frass, 0)),
+         puckering = case_when(
+           puckering %in% c("pA", "pL", "pU") ~ 1,
+           TRUE ~ 0
+         ),
+         galleries = case_when(
+           galleries %in% c("gA", "gL", "gU") ~ 1,
+           TRUE ~ 0
+         ),
+         beetlesum = case_when(
+           frass == 0 & puckering == 0 & galleries == 0 ~ 0,
+           TRUE ~ 1
+         )) |>
+  # Add in basal area
+  mutate(stemID = paste0(transectNr, ".", elevation, ".", tree, ".", stem)) |>
+  left_join(transect.data.basalArea)
+
+# Sum up the basal area by transect
+transect.data.BA.sum = transect.data.canopy |>
+  group_by(transectNr, elevation) |>
+  summarise(basal.area.total = sum(basal.area, na.rm = TRUE))
+
+# Make an object with all the areas and data
+transect.data.all = transect.data.canopy |>
+  left_join(transect.data.BA.sum)
+
+# Calculate classes
+transect.data.classes = transect.data.all |>
+  mutate(
+    # What percent of plot basal area does this stem take up?
+    basal.area.proportion = basal.area/basal.area.total,
+    # Multiply the canopy value (1-5) or beetle number (0 or 1)
+    canopy.scaled = canopy.number * basal.area.proportion,
+    beetle.scaled = beetlesum * basal.area.proportion) |>
+  # Sum up totals per plot
+  group_by(transectNr, elevation) |>
+  summarise(scaled.canopy.class = round(sum(canopy.scaled, na.rm = TRUE), 3),
+            scaled.beetle.class = round(sum(beetle.scaled, na.rm = TRUE), 3)) |>
+  # Assign classes
+  mutate(class = case_when(
+    scaled.canopy.class >= 3.5 & scaled.beetle.class < 0.5 ~ "low severity",
+    scaled.canopy.class < 3.5 & scaled.canopy.class > 2 & scaled.beetle.class > 0.5 ~ "moderate severity",
+    scaled.canopy.class <= 2 & scaled.beetle.class >= 0.5 ~ "high severity",
+    scaled.canopy.class < 3.5 & scaled.beetle.class < 0.5 ~ "high canopy death w/ few beetles",
+    scaled.canopy.class >= 3.5 & scaled.beetle.class >= 0.5 ~ "low canopy death w/ many beetles"
+  ))
+
+# write.csv(transect.data.classes, "outputs/2024.02.15_SabinaTransectsClassed.csv")
