@@ -124,12 +124,17 @@ ggplot(tree.data.all.canopy, aes(x = as.character(plot), y = canopy.number)) +
 
 # Try to divide into three classes
 canopy.data.classes = tree.data.all |>
-  mutate(basal.area.proportion = basal.area/basal.area.total,
+  mutate(
+    # What percent of plot basal area does this stem take up?
+    basal.area.proportion = basal.area/basal.area.total,
+    # Multiply the canopy value (1-5) or beetle number (0 or 1)
          canopy.scaled = canopy.number * basal.area.proportion,
          beetle.scaled = beetlesum * basal.area.proportion) |>
+  # Sum up totals per plot
   group_by(plot) |>
-    summarise(scaled.canopy.class = sum(canopy.scaled, na.rm = TRUE),
-              scaled.beetle.class = sum(beetle.scaled)) |>
+    summarise(scaled.canopy.class = round(sum(canopy.scaled, na.rm = TRUE), 3),
+              scaled.beetle.class = round(sum(beetle.scaled), 3)) |>
+  # Assign classes
   mutate(class = case_when(
     scaled.canopy.class >= 3.5 & scaled.beetle.class < 0.5 ~ "low severity",
     scaled.canopy.class < 3.5 & scaled.canopy.class > 2 & scaled.beetle.class > 0.5 ~ "moderate severity",
@@ -137,6 +142,8 @@ canopy.data.classes = tree.data.all |>
     scaled.canopy.class < 3.5 & scaled.beetle.class < 0.5 ~ "high canopy death w/ few beetles"
   )) |>
   mutate(plot = round(plot))
+
+write.csv(canopy.data.classes, "outputs/2024.02.14_PlotClasses_BasalAreaScaling.csv")
 
 stem.data.classes = stem.data.all |>
   group_by(plot) |>
