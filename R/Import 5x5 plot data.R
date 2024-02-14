@@ -21,6 +21,7 @@ subplot.data = tempSubplot |>
   # Correct row names
   row_to_names(row_number = 1) |>
   clean_names(case = "lower_camel") |>
+  select(-na) |>
   # Some data entry was not completed
   # THIS STEP IS DANGEROUS, check here first for errors
   fill(plot, .direction = "down") |>
@@ -89,6 +90,8 @@ subplot.data = tempSubplot |>
     species == "Unknown pimelea"~ "Pimelea",
     species == "Unknown Orchid (Caladenia)" ~ "Caladenia",
     species %in% c("Viola bentonicifolia", "Viola betiusefola", "Viola betonicfolia", "Viola betonicifolia") ~ "Viola betonicifolia",
+    species == "carraway" ~ "Oreomyrrhis eriopoda",
+    species == "sorrel" ~ "Acetosella vulgaris",
     TRUE ~ species
   ),
   species = str_replace(species, " sp.", ""),
@@ -96,7 +99,9 @@ subplot.data = tempSubplot |>
   species = str_replace(species, "Celmecia", "Celmisia"),
   species = str_replace(species, "Celmesia", "Celmisia"),
   species = str_replace(species, "uk ", "Unknown "),
-  species = str_to_sentence(trimws(species)))
+  species = str_to_sentence(trimws(species))) |>
+  # Remove duplicates of the same species in the same plot
+  distinct()
 
 table(subplot.data$species)
 
