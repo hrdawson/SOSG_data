@@ -10,7 +10,7 @@ filesTrees <- dir(path = "raw_data/fixed area plot (permanent plot) data", patte
                   full.names = TRUE, recursive = TRUE)
 
 # Read in data
-tempTrees = map_dfr(filesCover, read_xlsx, sheet = "Tree-level", skip = 1,
+tempTrees = map_dfr(filesTrees, read_xlsx, sheet = "Tree-level", skip = 1,
                     col_names = FALSE)
 
 # Clean data ----
