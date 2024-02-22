@@ -36,3 +36,14 @@ get_file(
   path = "raw_data",
   # Where is the file stored within the OSF repository?
   remote_path = "raw_data/soils")
+
+# Canopy data ----
+get_file(
+  # Which repository is it in?
+  node = "afk2p",
+  # Which file do you want?
+  file = "SOSG tree data 2024.xlsx",
+  # Where do you want the file to go to?
+  path = "raw_data",
+  # Where is the file stored within the OSF repository?
+  remote_path = "raw_data/permanentPlot")
