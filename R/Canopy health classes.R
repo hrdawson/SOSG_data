@@ -43,7 +43,10 @@ tree.data.canopy = read.csv("clean_data/Tree data.csv") |>
 
 # Prep 2024 data ----
 ## Calculate 2024 basal area per stem ----
-tree.data.2024.basalArea = read.csv("raw_data/SOSG tree data 2024.csv") |>
+library(readxl)
+tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data")
+
+tree.data.2024.basalArea = tree.data.2024 |>
   mutate(plot = case_when(
     burnHistory == "unburned" & health == "moderate" & plotNr == 1 ~ 21,
     burnHistory == "unburned" & health == "moderate" & plotNr == 2 ~ 22,
