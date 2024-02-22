@@ -90,8 +90,9 @@ subplot.data = tempSubplot |>
     species == "Unknown pimelea"~ "Pimelea",
     species == "Unknown Orchid (Caladenia)" ~ "Caladenia",
     species %in% c("Viola bentonicifolia", "Viola betiusefola", "Viola betonicfolia", "Viola betonicifolia") ~ "Viola betonicifolia",
-    species == "carraway" ~ "Oreomyrrhis eriopoda",
-    species == "sorrel" ~ "Acetosella vulgaris",
+    species == "Carraway" ~ "Oreomyrrhis eriopoda",
+    species == "Sorrel" ~ "Acetosella vulgaris",
+    species %in% c("Olearia brevipunctata", "Olearia brevipunctata") ~ "Olearia brevipedunculata",
     TRUE ~ species
   ),
   species = str_replace(species, " sp.", ""),
