@@ -47,10 +47,13 @@ library(readxl)
 tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data")
 
 tree.data.2024.basalArea = tree.data.2024 |>
+  # Filter out the burned plot
   mutate(plot = case_when(
     burnHistory == "unburned" & health == "moderate" & plotNr == 1 ~ 21,
     burnHistory == "unburned" & health == "moderate" & plotNr == 2 ~ 22,
     burnHistory == "unburned" & health == "excellent" & plotNr == 1 ~ 7.2,
+    plotNr == 23 ~ 23,
+    plotNr == 24 ~ 24,
     TRUE ~ NA
   )) |>
   drop_na(plot) |>
@@ -61,7 +64,7 @@ tree.data.2024.basalArea = tree.data.2024 |>
   filter(!is.na(basal.area))
 
 ## Prepare 2024 stem data ----
-tree.data.2024.canopy = read.csv("raw_data/SOSG tree data 2024.csv") |>
+tree.data.2024.canopy = tree.data.2024 |>
   select(burnHistory:plotNr, treeNr:hollows, canopy, frass:galleries) |>
   rename(tree = treeNr, stem = stemNr, live = aliveStatus,
          bark = barkStatus, number = hollows) |>
@@ -77,6 +80,8 @@ tree.data.2024.canopy = read.csv("raw_data/SOSG tree data 2024.csv") |>
     burnHistory == "unburned" & health == "moderate" & plotNr == 1 ~ 21,
     burnHistory == "unburned" & health == "moderate" & plotNr == 2 ~ 22,
     burnHistory == "unburned" & health == "excellent" & plotNr == 1 ~ 7.2,
+    plotNr == 23 ~ 23,
+    plotNr == 24 ~ 24,
     TRUE ~ NA
   )) |>
   # Beetles
@@ -100,6 +105,8 @@ tree.data.2024.canopy = read.csv("raw_data/SOSG tree data 2024.csv") |>
     burnHistory == "unburned" & health == "moderate" & plotNr == 1 ~ 21,
     burnHistory == "unburned" & health == "moderate" & plotNr == 2 ~ 22,
     burnHistory == "unburned" & health == "excellent" & plotNr == 1 ~ 7.2,
+    plotNr == 23 ~ 23,
+    plotNr == 24 ~ 24,
     TRUE ~ NA
   )) |>
   select(-plotNr) |>
