@@ -44,18 +44,39 @@ tree.data.canopy = read.csv("clean_data/Tree data.csv") |>
 # Prep 2024 data ----
 ## Calculate 2024 basal area per stem ----
 library(readxl)
-tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data")
+
+test = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data") |>
+  mutate(test = case_when(
+    plotNickname == "Geebung" ~ "test"
+  ))
+
+tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data") |>
+  # Fix plotNr
+  mutate(plotNr = round(as.numeric(plotNr))) |>
+  # Filter out the burned plot
+  mutate(plotNickname = str_trim(plotNickname),
+    plot = case_when(
+      plotNickname == "Burning Log" ~ 23,
+      burnHistory == "unburned" & health == "moderate" & plotNr == 1 ~ 21,
+      burnHistory == "unburned" & health == "moderate" & plotNr == 2 ~ 22,
+      burnHistory == "unburned" & health == "excellent" & plotNr == 1 ~ 7.2,
+      burnHistory == "burned" & plotNr == 1 ~ 25,
+      plotNickname == "Aqueduct" ~ 26,
+      plotNickname == "Charlotte Pass" ~ 29,
+      plotNickname == "2K" ~ 27,
+      plotNickname == "Swing Bridge" ~ 24,
+      plotNickname == "Snowies Alpine" ~ 28,
+      plotNickname == "Geebung" ~ 30,
+      plotNickname == "Perisher" ~ 31,
+      plotNr == 481 ~ 481,
+      plotNr == 484 ~ 484,
+      TRUE ~ NA
+    ))
+
+table(tree.data.2024$plot)
+table(tree.data.2024$plotNickname)
 
 tree.data.2024.basalArea = tree.data.2024 |>
-  # Filter out the burned plot
-  mutate(plot = case_when(
-    burnHistory == "unburned" & health == "moderate" & plotNr == 1 ~ 21,
-    burnHistory == "unburned" & health == "moderate" & plotNr == 2 ~ 22,
-    burnHistory == "unburned" & health == "excellent" & plotNr == 1 ~ 7.2,
-    plotNr == 23 ~ 23,
-    plotNr == 24 ~ 24,
-    TRUE ~ NA
-  )) |>
   drop_na(plot) |>
   mutate(stemID = paste0(plot, ".", treeNr, ".", stemNr)) |>
   select(stemID, dbh) |>
@@ -65,7 +86,7 @@ tree.data.2024.basalArea = tree.data.2024 |>
 
 ## Prepare 2024 stem data ----
 tree.data.2024.canopy = tree.data.2024 |>
-  select(burnHistory:plotNr, treeNr:hollows, canopy, frass:galleries) |>
+  select(burnHistory:plotNr, plot, treeNr:hollows, canopy, frass:galleries) |>
   rename(tree = treeNr, stem = stemNr, live = aliveStatus,
          bark = barkStatus, number = hollows) |>
   # Assign numerical value to canopy
@@ -75,14 +96,6 @@ tree.data.2024.canopy = tree.data.2024 |>
     canopy == "fair" ~ 3,
     canopy == "poor" ~ 2,
     canopy == "none" ~ 1
-  ),
-  plot = case_when(
-    burnHistory == "unburned" & health == "moderate" & plotNr == 1 ~ 21,
-    burnHistory == "unburned" & health == "moderate" & plotNr == 2 ~ 22,
-    burnHistory == "unburned" & health == "excellent" & plotNr == 1 ~ 7.2,
-    plotNr == 23 ~ 23,
-    plotNr == 24 ~ 24,
-    TRUE ~ NA
   )) |>
   # Beetles
   # Turn binary
@@ -100,18 +113,9 @@ tree.data.2024.canopy = tree.data.2024 |>
   ),
   beetlesum = case_when(
     frass == 0 & puckering == 0 & galleries == 0 ~ 0,
-    TRUE ~ 1),
-  plot = case_when(
-    burnHistory == "unburned" & health == "moderate" & plotNr == 1 ~ 21,
-    burnHistory == "unburned" & health == "moderate" & plotNr == 2 ~ 22,
-    burnHistory == "unburned" & health == "excellent" & plotNr == 1 ~ 7.2,
-    plotNr == 23 ~ 23,
-    plotNr == 24 ~ 24,
-    TRUE ~ NA
-  )) |>
+    TRUE ~ 1)) |>
   select(-plotNr) |>
   # Add basal area
-  mutate(stemID = paste0(plot, ".", tree, ".", stem)) |>
   left_join(tree.data.2024.basalArea) |>
   drop_na(basal.area)
 
@@ -178,7 +182,7 @@ canopy.data.classes = tree.data.all |>
   ) |>
   mutate(plot = round(plot))
 
-write.csv(canopy.data.classes, "outputs/2024.02.14_PlotClasses_BasalAreaScaling.csv")
+write.csv(canopy.data.classes, "outputs/2024.03.20_PlotClasses_BasalAreaScaling.csv")
 
 # Compare canopy health with binary beetles ----
 tree.data.canopy = tree.data.all |>
