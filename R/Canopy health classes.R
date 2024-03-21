@@ -45,11 +45,6 @@ tree.data.canopy = read.csv("clean_data/Tree data.csv") |>
 ## Calculate 2024 basal area per stem ----
 library(readxl)
 
-test = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data") |>
-  mutate(test = case_when(
-    plotNickname == "Geebung" ~ "test"
-  ))
-
 tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data") |>
   # Fix plotNr
   mutate(plotNr = round(as.numeric(plotNr))) |>
@@ -60,7 +55,7 @@ tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data")
       burnHistory == "unburned" & health == "moderate" & plotNr == 1 ~ 21,
       burnHistory == "unburned" & health == "moderate" & plotNr == 2 ~ 22,
       burnHistory == "unburned" & health == "excellent" & plotNr == 1 ~ 7.2,
-      burnHistory == "burned" & plotNr == 1 ~ 25,
+      burnHistory == "burned" & plotNr == 1 ~ 32,
       plotNickname == "Aqueduct" ~ 26,
       plotNickname == "Charlotte Pass" ~ 29,
       plotNickname == "2K" ~ 27,
@@ -68,6 +63,7 @@ tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data")
       plotNickname == "Snowies Alpine" ~ 28,
       plotNickname == "Geebung" ~ 30,
       plotNickname == "Perisher" ~ 31,
+      plotNickname == "Blue Cow Lift" ~ 25,
       plotNr == 481 ~ 481,
       plotNr == 484 ~ 484,
       TRUE ~ NA
@@ -183,6 +179,8 @@ canopy.data.classes = tree.data.all |>
   mutate(plot = round(plot))
 
 write.csv(canopy.data.classes, "outputs/2024.03.20_PlotClasses_BasalAreaScaling.csv")
+
+hist(canopy.data.classes$scaled.canopy.class, breaks = 20)
 
 # Compare canopy health with binary beetles ----
 tree.data.canopy = tree.data.all |>
