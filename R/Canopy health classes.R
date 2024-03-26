@@ -1,3 +1,6 @@
+library(tidyverse)
+library(readxl)
+
 # Calculate basal area for permanent plots ----
 basal.area.fn <- function(x){ (pi*(x)^2)/40000 } # calculate basal area in m^2
 
@@ -43,7 +46,6 @@ tree.data.canopy = read.csv("clean_data/Tree data.csv") |>
 
 # Prep 2024 data ----
 ## Calculate 2024 basal area per stem ----
-library(readxl)
 
 tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data") |>
   # Fix plotNr
