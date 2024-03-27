@@ -84,7 +84,7 @@ tree.data.2024.basalArea = tree.data.2024 |>
 
 ## Prepare 2024 stem data ----
 tree.data.2024.canopy = tree.data.2024 |>
-  select(burnHistory:plotNr, plot, treeNr:hollows, canopy, frass:galleries) |>
+  select(plotNickname, burnHistory:plotNr, plot, treeNr:hollows, canopy, frass:galleries, GPS, dendroNr, dendroType) |>
   rename(tree = treeNr, stem = stemNr, live = aliveStatus,
          bark = barkStatus, number = hollows) |>
   # Assign numerical value to canopy
@@ -114,6 +114,7 @@ tree.data.2024.canopy = tree.data.2024 |>
     TRUE ~ 1)) |>
   select(-plotNr) |>
   # Add basal area
+  mutate(stemID = paste0(plot, ".", tree, ".", stem)) |>
   left_join(tree.data.2024.basalArea) |>
   drop_na(basal.area)
 
@@ -122,7 +123,16 @@ tree.data.all.canopy = tree.data.canopy |>
   mutate(live = as.character(live),
          bark = as.character(bark),
          burnt = as.character(burnt)) |>
-  bind_rows(tree.data.2024.canopy)
+  bind_rows(tree.data.2024.canopy) |>
+  distinct()
+
+# Export dendros and GPS points
+tree.data.gps = tree.data.all.canopy |>
+  select(plotNickname, plot, tree, stem, dbh, GPS, dendroNr, dendroType) |>
+  # Select trees with dendros
+  drop_na(dendroNr) |>
+  filter(dendroType != "none") |>
+  distinct()
 
 # Figure out basal area for all plots ----
 
