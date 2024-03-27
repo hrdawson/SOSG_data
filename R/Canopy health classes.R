@@ -197,6 +197,16 @@ table(canopy.data.classes$canopy_category)
 
 hist(canopy.data.classes$scaled.canopy.class, breaks = 20)
 
+# Visualise canopy health as a continuous scale ----
+ggplot(canopy.data.classes |> filter(plot < 40), aes(y = plot, x = scaled.canopy.class, colour = canopy_category)) +
+  geom_point(size = 4) +
+  scale_colour_manual(values = c("dodgerblue3", "gold2", "firebrick3")) +
+  labs(x = "Mean canopy health scaled by basal area", y = "Plot number") +
+  theme_bw() +
+  theme(axis.title = element_text(size = 16))
+
+ggsave("outputs/2024.03.27_canopyClassContinuous.png", width = 8, height = 6, units = "in")
+
 # Compare canopy health with binary beetles ----
 tree.data.canopy = tree.data.all |>
   # average affect on trees
