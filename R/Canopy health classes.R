@@ -75,7 +75,7 @@ table(tree.data.2024$plot)
 table(tree.data.2024$plotNickname)
 
 tree.data.2024.basalArea = tree.data.2024 |>
-  drop_na(plot) |>
+  drop_na(plotNr) |>
   mutate(stemID = paste0(plot, ".", treeNr, ".", stemNr)) |>
   select(stemID, dbh) |>
   group_by(stemID) |>
@@ -84,6 +84,7 @@ tree.data.2024.basalArea = tree.data.2024 |>
 
 ## Prepare 2024 stem data ----
 tree.data.2024.canopy = tree.data.2024 |>
+  drop_na(plotNr) |>
   select(plotNickname, burnHistory:plotNr, plot, treeNr:hollows, canopy, frass:galleries, GPS, dendroNr, dendroType) |>
   rename(tree = treeNr, stem = stemNr, live = aliveStatus,
          bark = barkStatus, number = hollows) |>
@@ -171,7 +172,7 @@ canopy.data.classes = tree.data.all |>
   # Filter out the old plot 7
   filter(plot != 7) |>
   # Sum up totals per plot
-  group_by(plot) |>
+  group_by(plot, plotNickname) |>
     summarise(scaled.canopy.class = round(sum(canopy.scaled, na.rm = TRUE), 3),
               scaled.beetle.class = round(sum(beetle.scaled), 3)) |>
   # Assign classes
@@ -190,7 +191,9 @@ canopy.data.classes = tree.data.all |>
   ) |>
   mutate(plot = round(plot))
 
-write.csv(canopy.data.classes, "outputs/2024.03.20_PlotClasses_BasalAreaScaling.csv")
+# write.csv(canopy.data.classes, "outputs/2024.03.27_PlotClasses_BasalAreaScaling.csv")
+
+table(canopy.data.classes$canopy_category)
 
 hist(canopy.data.classes$scaled.canopy.class, breaks = 20)
 
