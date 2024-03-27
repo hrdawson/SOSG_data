@@ -69,6 +69,16 @@ tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data")
       plotNr == 481 ~ 481,
       plotNr == 484 ~ 484,
       TRUE ~ NA
+    )) |>
+  # Resolve funny formatting of dendroNr
+  mutate(dendroNr = case_when(
+    dendroNr == "15?" ~ "15",
+    TRUE ~ dendroNr),
+    dendroNr = round(as.numeric(dendroNr), 1)) |>
+    # Correct dendro numbers
+  mutate(dendroNr = case_when(
+      burnHistory == "unburned" & health == "excellent" & dendroNr %in% c(20, 26, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42) ~ dendroNr + 100,
+    TRUE ~ dendroNr
     ))
 
 table(tree.data.2024$plot)
@@ -127,13 +137,37 @@ tree.data.all.canopy = tree.data.canopy |>
   bind_rows(tree.data.2024.canopy) |>
   distinct()
 
-# Export dendros and GPS points
+write.csv(tree.data.all.canopy, "outputs/2024.03.27_Permanent plot trees for Weerach.csv")
+
+# Export dendros and GPS points ----
+gps.extra = read.csv("raw_data/SOSG dendro GPS points added on.csv") |> rename(GPS2 = GPS) |>
+  select(dendroNr, GPS2)
+
 tree.data.gps = tree.data.all.canopy |>
+  select(plotNickname, plot, tree, stem, dbh, GPS, dendroNr, dendroType) |>
+  # Resolve funny formatting of dendroNr
+  mutate(dendroNr = case_when(
+    dendroNr == "15?" ~ "15",
+    TRUE ~ dendroNr),
+    dendroNr = round(as.numeric(dendroNr), 1)) |>
+  # Select trees with dendros
+  drop_na(dendroNr) |>
+  filter(dendroType != "none") |>
+  distinct() |>
+  # Add in missing points
+  left_join(gps.extra)
+
+
+## Find missing dendros ----
+test = tree.data.all.canopy |>
   select(plotNickname, plot, tree, stem, dbh, GPS, dendroNr, dendroType) |>
   # Select trees with dendros
   drop_na(dendroNr) |>
   filter(dendroType != "none") |>
   distinct()
+
+missing.dendro = gps.extra |>
+  anti_join(test)
 
 # Figure out basal area for all plots ----
 
