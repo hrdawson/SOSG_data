@@ -80,13 +80,14 @@ tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data")
     dendroNr = round(as.numeric(dendroNr), 1)) |>
     # Correct dendro numbers
   mutate(dendroNr = case_when(
-      burnHistory == "unburned" & health == "excellent" & treeNr > 10 &
+      burnHistory == "unburned" & health == "excellent" & plotNr == 1 & treeNr > 10 &
         dendroNr %in% c(20, 26, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42) ~ dendroNr + 100,
     TRUE ~ dendroNr
     )) |>
   # Filter out erroneous data entry
   mutate(flag = case_when(
     dendroNr == 90 & treeNr == 34 ~ "data entry error",
+    plot == 22 & treeNr == 51 ~ "wrong plot"
     TRUE ~ "okay"
   )) |>
   filter(flag == "okay")
