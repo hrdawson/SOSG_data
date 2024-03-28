@@ -68,6 +68,9 @@ tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data")
       plotNickname == "Blue Cow Lift" ~ 25,
       plotNr == 481 ~ 481,
       plotNr == 484 ~ 484,
+      plotNickname == "SE-Satellite East" ~ 387,
+      plotNickname == "SW-Satellite West" ~ 403,
+      plotNickname == "SS-Satellite South" ~ 419,
       TRUE ~ NA
     )) |>
   # Resolve funny formatting of dendroNr
@@ -77,15 +80,22 @@ tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data")
     dendroNr = round(as.numeric(dendroNr), 1)) |>
     # Correct dendro numbers
   mutate(dendroNr = case_when(
-      burnHistory == "unburned" & health == "excellent" & dendroNr %in% c(20, 26, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42) ~ dendroNr + 100,
+      burnHistory == "unburned" & health == "excellent" & treeNr > 10 &
+        dendroNr %in% c(20, 26, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42) ~ dendroNr + 100,
     TRUE ~ dendroNr
-    ))
+    )) |>
+  # Filter out erroneous data entry
+  mutate(flag = case_when(
+    dendroNr == 90 & treeNr == 34 ~ "data entry error",
+    TRUE ~ "okay"
+  )) |>
+  filter(flag == "okay")
 
 table(tree.data.2024$plot)
 table(tree.data.2024$plotNickname)
 
 tree.data.2024.basalArea = tree.data.2024 |>
-  drop_na(plotNr) |>
+  drop_na(plot) |>
   mutate(stemID = paste0(plot, ".", treeNr, ".", stemNr)) |>
   select(stemID, dbh) |>
   group_by(stemID) |>
@@ -94,7 +104,7 @@ tree.data.2024.basalArea = tree.data.2024 |>
 
 ## Prepare 2024 stem data ----
 tree.data.2024.canopy = tree.data.2024 |>
-  drop_na(plotNr) |>
+  drop_na(plot) |>
   select(plotNickname, burnHistory:plotNr, plot, treeNr:hollows, canopy, frass:galleries, GPS, dendroNr, dendroType) |>
   rename(tree = treeNr, stem = stemNr, live = aliveStatus,
          bark = barkStatus, number = hollows) |>
@@ -137,7 +147,7 @@ tree.data.all.canopy = tree.data.canopy |>
   bind_rows(tree.data.2024.canopy) |>
   distinct()
 
-write.csv(tree.data.all.canopy, "outputs/2024.03.27_Permanent plot trees for Weerach.csv")
+# write.csv(tree.data.all.canopy, "outputs/2024.03.27_Permanent plot trees for Weerach.csv")
 
 # Export dendros and GPS points ----
 gps.extra = read.csv("raw_data/SOSG dendro GPS points added on.csv") |> rename(GPS2 = GPS) |>
@@ -147,16 +157,28 @@ tree.data.gps = tree.data.all.canopy |>
   select(plotNickname, plot, tree, stem, dbh, GPS, dendroNr, dendroType) |>
   # Resolve funny formatting of dendroNr
   mutate(dendroNr = case_when(
-    dendroNr == "15?" ~ "15",
+    dendroNr == "15?" ~ 15,
     TRUE ~ dendroNr),
-    dendroNr = round(as.numeric(dendroNr), 1)) |>
+    dendroNr = round(as.numeric(dendroNr), 1),
+    GPS = as.integer(GPS)) |>
   # Select trees with dendros
   drop_na(dendroNr) |>
   filter(dendroType != "none") |>
   distinct() |>
   # Add in missing points
-  left_join(gps.extra)
+  left_join(gps.extra)  |>
+  # Add in plot nicknames
+  mutate(plotNickname = case_when(
+    plot == 7.2 ~ "Spencers Creek",
+    plot == 21 ~ "Illawong",
+    plot == 22 ~ "Pipers Gap",
+    TRUE ~ plotNickname
+  )) |>
+  # Bring together the two GPS columns
+  mutate(GPSpoint = coalesce(GPS, GPS2)) |>
+  arrange(dendroNr)
 
+# write.csv(tree.data.gps, "outputs/2024.03.28_dendroGPSPoints.csv")
 
 ## Find missing dendros ----
 test = tree.data.all.canopy |>
