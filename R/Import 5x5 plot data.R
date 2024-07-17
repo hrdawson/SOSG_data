@@ -61,21 +61,29 @@ subplot.data = tempSubplot |>
   mutate_at(c("midlineDistance", "sample", "coverPercent", "abundance",
               "cwdLengthM"), as.numeric) |>
   # Disambiguate species names
-  mutate(species = case_when(
+  mutate(
+    species = str_replace(species, " sp.", ""),
+    species = str_replace(species, "Celmecia", "Celmisia"),
+    species = str_replace(species, "Celmesia", "Celmisia"),
+    species = str_replace(species, "Oleria", "Olearia"),
+    species_resolved = case_when(
     species == "Acriphylla simplicifolia" ~ "Aciphylla simplicifolia",
     species %in% c("Asperula gunii", "Asperulla gunii", "Asperulla gunnii") ~ "Asperula gunnii",
     species == "Acrothamnus maccrali" ~ "Acrothamnus maccraei",
     species == "Backea gunniana" ~ "Baeckea gunniana",
-    species %in% c("Celmesia tomantella", "Celmisia tomentella", "Clemisia tomentella") ~ "Celmisia tomentella",
-    species == "Curex" ~ "Carex",
+    species == "Baeckea?" ~ "Baeckea",
+    species %in% c("Celmesia tomantella", "Celmisia tomentella",
+                   "Clemisia tomentella", "Celmisia tomantella") ~ "Celmisia tomentella",
+    species == "Celmisia Pugioniformis" ~ "Celmisia pugioniformis",
+    species %in% c("Curex", "Carex?") ~ "Carex",
     species == "Crespidia" ~ "Craspedia",
     species == "Empadisma minus" ~ "Empodisma minus",
-    species == "Epachris?" ~ "Epacris?",
+    species %in% c("Epachris?", "Apacras?") ~ "Epacris",
     species == "Grevillea australia" ~ "Grevillea australis",
-    species == "Hovea montata" ~ "Hovea montana",
+    species %in% c("Hovea montata", "Hovea Montana") ~ "Hovea montana",
     species %in% c("Oriomyrrhis eriopoda", "Oreomyrrhis eriopoda", "Oreomyrrhis eriopoda") ~ "Oreomyrrhis eriopoda",
     species %in% c("Ozothamnus secandifolius", "Ozothamnus secundiflora", "Ozothamnus secundiflorus") ~ "Ozothamnus secundiflorus",
-    species == "Orchid 1" ~ "Unknown orchid 1",
+    species == "Orchid 1" ~ "Orchidaceae",
     species == "Pterostylis (orchid)" ~ "Pterostylis",
     species == "Pimelea lingustrina" ~ "Pimelea ligustrina",
     species == "Pimelia axiflora" ~ "Pimelea axiflora",
@@ -93,17 +101,27 @@ subplot.data = tempSubplot |>
     species == "Carraway" ~ "Oreomyrrhis eriopoda",
     species == "Sorrel" ~ "Acetosella vulgaris",
     species %in% c("Olearia brevipunctata", "Olearia brevipunctata") ~ "Olearia brevipedunculata",
+    species == "Lily" ~ "Liliaceae",
+    species == "Probably acrothamnus- Red" ~ "Acrothamnus",
+    species %in% c("Sedge?", "Unknown sedge") ~ "Cyperaceae",
+    species == "Seneciocies 2" ~ "Senecio",
+    species == "Unknown geranium" ~ "Geranium",
+    species == "uk mallee" ~ "Eucalyptus",
+    species %in% c("Unknown grass (flag)", "Unknown grass (furry)", "Unknown Grass 1", "Unknown Grass 2",
+                   "Unknown Grass 3", "Unknown grass 1", "Unknown grass 2", "Unknown Grass- HAiry", "Unknown Grass", "uk Poa") ~ "Poaceae",
+    species %in% c("uk asteracae", "Unknown asteraceae", "Unknown daisy") ~ "Asteraceae",
+    species %in% c("long leaf forb", "Unknown pocket forb", "Pocket Forb", "Unknown forb", "Unknown forb (cutie)", "Unknown forb 1",
+                   "Unknown shrub (faekea)", "Unknown shrub", "Unknown spider thing?", "Unknownder thing?",
+                   "Unknown shrub 1", "cushion thing?") ~ "Unknown",
     TRUE ~ species
   ),
-  species = str_replace(species, " sp.", ""),
-  species = str_replace(species, "Oleria", "Olearia"),
-  species = str_replace(species, "Celmecia", "Celmisia"),
-  species = str_replace(species, "Celmesia", "Celmisia"),
   species = str_replace(species, "uk ", "Unknown "),
   species = str_to_sentence(trimws(species))) |>
   # Remove duplicates of the same species in the same plot
-  distinct()
+  distinct() |>
+  rename(species_field = species, species = species_resolved)
 
+table(subplot.data$species_field)
 table(subplot.data$species)
 
 write.csv(subplot.data, "clean_data/5x5 subplot data.csv")
