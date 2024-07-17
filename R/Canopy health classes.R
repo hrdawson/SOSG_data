@@ -87,7 +87,7 @@ tree.data.2024 = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data")
   # Filter out erroneous data entry
   mutate(flag = case_when(
     dendroNr == 90 & treeNr == 34 ~ "data entry error",
-    plot == 22 & treeNr == 51 ~ "wrong plot"
+    plot == 22 & treeNr == 51 ~ "wrong plot",
     TRUE ~ "okay"
   )) |>
   filter(flag == "okay")
