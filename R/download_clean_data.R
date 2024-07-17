@@ -15,4 +15,4 @@ get_file(
   # Where do you want the file to go to?
   path = "clean_data",
   # Where is the file stored within the OSF repository?
-  remote_path = "Vegetation/clean_data")
+  remote_path = "Vegetation")
