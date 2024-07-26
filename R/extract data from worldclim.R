@@ -25,6 +25,13 @@ library(purrr)
 points = read.csv("raw_data/permanent plot points 2023.csv") |>
   dplyr::rename(plotName = name) |>
   bind_rows(read.csv("raw_data/permanent plot points 2024.csv")) |>
+  # select(id, plotName, longitude, latitude) |>
+  # rename(plot = id) |>
+  # left_join(read.csv("outputs/2024.07.23_canopy.data.classes.csv")) |>
+  # select(-c(X, plotNickname)) |>
+  # left_join(read.csv("outputs/worldclim_metadata.csv")) |>
+  # drop_na(plot) |>
+  # write.csv("outputs/2024.07.23_plot_metadata.csv")
   dplyr::rename(lon = longitude, lat = latitude) |>
   drop_na(lon) |>
   dplyr::select(id, plotName, lon, lat)
@@ -157,3 +164,5 @@ clim.meta = points %>%
   inner_join(ANUCLIM) |>
   separate(lat_lon, into = c("latitude", "longitude"), sep = "_") |>
   dplyr::rename(plot = id, nickname = plotName)
+
+write.csv(clim.meta, "outputs/worldclim_metadata.csv")
