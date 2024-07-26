@@ -206,6 +206,7 @@ canopy.data.classes = tree.data.all |>
   ) |>
   mutate(plot = round(plot))
 
+# write.csv(canopy.data.classes, "outputs/2024.07.23_canopy.data.classes.csv")
 # write.csv(canopy.data.classes, "outputs/2024.03.27_PlotClasses_BasalAreaScaling.csv")
 
 table(canopy.data.classes$canopy_category)
