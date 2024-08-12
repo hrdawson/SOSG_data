@@ -1,0 +1,10 @@
+"","Variable.name","Description","Variable type","Variable range or levels","Units","How.measured"
+"1","X","place holder created by R. Unreliable.","numeric","1 - 1100",NA,"calculated"
+"2","plot","Plot number","numeric","1 - 20",NA,"defined"
+"3","assessor1","Name of the person leading data collection","categorical","Aaron - Sabina",NA,"defined"
+"4","assessor2","Name of the other person/people measuring data","categorical","Aaron - Sabina Aitken",NA,"defined"
+"5","date","Date that the plot was surveyed","categorical","2023-01-17 - 2023-03-19","yyyy-mm-dd","recorded"
+"6","midlineDistanceM","Subplot distance from the base of the plot","numeric","0 - 40","meters","recorded"
+"7","na","Unknown??","categorical","Plot number manually changed to 11 from 1 by HRD Jan 2024 - Plot number manually changed to 11 from 1 by HRD Jan 2028",NA,NA
+"8","typeCover","What type of vegetation cover was measured","categorical","bareSoil - tussock",NA,"defined"
+"9","percent","What percentage of the subplot that typeCover represents, rounded to the nearest 10% unless less than 10 in which rounded to nearest 5 or 1%. Trace amounts recorded as 0.1.","numeric","0 - 100","percent","recorded"
