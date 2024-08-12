@@ -6,12 +6,23 @@
 # remotes::install_github("Between-the-Fjords/dataDownloader")
 library(dataDownloader)
 
-# 5x5 plot data
+# Tree canopy data ----
 get_file(
   # Which repository is it in?
   node = "afk2p",
   # Which file do you want?
-  file = "Tree data.csv",
+  file = "Tree data 2023.csv",
+  # Where do you want the file to go to?
+  path = "clean_data",
+  # Where is the file stored within the OSF repository?
+  remote_path = "Vegetation")
+
+# 5x5 subplot data ----
+get_file(
+  # Which repository is it in?
+  node = "afk2p",
+  # Which file do you want?
+  file = "5x5 subplot data.csv",
   # Where do you want the file to go to?
   path = "clean_data",
   # Where is the file stored within the OSF repository?
