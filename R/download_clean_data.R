@@ -27,3 +27,14 @@ get_file(
   path = "clean_data",
   # Where is the file stored within the OSF repository?
   remote_path = "Vegetation")
+
+# Permanent plot metadata ----
+get_file(
+  # Which repository is it in?
+  node = "afk2p",
+  # Which file do you want?
+  file = "Permanent plot metadata.csv",
+  # Where do you want the file to go to?
+  path = "clean_data",
+  # Where is the file stored within the OSF repository?
+  remote_path = "Site")

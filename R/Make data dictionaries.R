@@ -34,7 +34,7 @@ get_started(data = read.csv("clean_data/5x5 subplot data.csv"))
 
 # Cover data dic ----
 # Start by creating a template CSV
-get_started(data = read.csv("clean_data/5x5 subplot data.csv"))
+get_started(data = read.csv("clean_data/Permanent plot metadata.csv"))
 
 # Open the template CSV and fill in manually
 # Save it in the data_dic folder and use the file name for the description_table argument
@@ -67,3 +67,11 @@ data_dic_permanentTrees <- make_data_dictionary(data = read.csv("clean_data/Perm
 
 write.csv(data_dic_permanentTrees, "data_dic/dataDic_permanentTrees.csv")
 
+## Permanent plot meta data ----
+# Make sure to save it as something other than its default name
+data_dic_plotMeta <- make_data_dictionary(data = read.csv("clean_data/Permanent plot metadata.csv"),
+                                                description_table = read.csv("data_dic/description_table_plotMeta.csv"),
+                                                table_ID = "meta",
+                                                keep_table_ID = FALSE)
+
+write.csv(data_dic_plotMeta, "data_dic/dataDic_plotMeta.csv")
