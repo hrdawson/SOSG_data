@@ -148,6 +148,7 @@ tree.data.all.canopy = tree.data.canopy |>
   bind_rows(tree.data.2024.canopy) |>
   distinct()
 
+# write.csv(tree.data.all.canopy, "clean_data/Permanent plot trees.csv")
 # write.csv(tree.data.all.canopy, "outputs/2024.03.27_Permanent plot trees for Weerach.csv")
 
 # Figure out basal area for all plots ----
