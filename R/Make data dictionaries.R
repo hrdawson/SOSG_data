@@ -75,3 +75,7 @@ data_dic_plotMeta <- make_data_dictionary(data = read.csv("clean_data/Permanent 
                                                 keep_table_ID = FALSE)
 
 write.csv(data_dic_plotMeta, "data_dic/dataDic_plotMeta.csv")
+
+# render readme --------------------------------------------------------
+# to avoid re running everything and slowing down the process, we render the readme file here
+rmarkdown::render(input = "README.Rmd")

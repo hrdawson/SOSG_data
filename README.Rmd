@@ -1,0 +1,33 @@
+---
+title: "README"
+output: github_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# source("R_code/data_dic/create_data_dictionary.R")
+```
+
+# Introduction
+For processing and prepping SOSG data. Not for individual paper analyses.
+
+## Plot  metadata
+```{r, echo=FALSE}
+knitr::kable(data_dic_plotMeta)
+```
+
+## Tree data
+```{r, echo=FALSE}
+knitr::kable(data_dic_permanentTrees)
+```
+
+## Subplot (5x5 m) data
+```{r, echo=FALSE}
+knitr::kable(data_dic_5x5)
+```
+
+## Subplot (1x1 m) data
+```{r, echo=FALSE}
+knitr::kable(data_dic_1x1)
+```
