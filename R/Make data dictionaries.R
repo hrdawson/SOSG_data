@@ -8,10 +8,11 @@ source("R/functions/get_started_data_dic.R")
 library(tidyverse)
 library(readxl)
 
-# Raw data dictionaries for reference when I return
+# Raw data dictionaries for reference when I return ----
 get_started(data = read_excel("raw_data/SOSG tree data 2024.xlsx", sheet = "data"))
 
-# Cover data dic ----
+# Clean data dictionaries ----
+## Permanent plot tree data dic ----
 # Start by creating a template CSV
 get_started(data = read.csv("clean_data/Permanent plot trees.csv"))
 
@@ -25,14 +26,13 @@ data_dic_treeData2023 <- make_data_dictionary(data = read.csv("clean_data/Tree d
                                         keep_table_ID = FALSE)
 write.csv(data_dic_treeData, "data_dic/dataDic_treeData_2023.csv")
 
-# Cover data dic ----
-# Start by creating a template CSV
+## Start by creating a template CSV ----
 get_started(data = read.csv("clean_data/5x5 subplot data.csv"))
 
 # Open the template CSV and fill in manually
 # Save it in the data_dic folder and use the file name for the description_table argument
 
-# Cover data dic ----
+## Permanent plot metadata data dic ----
 # Start by creating a template CSV
 get_started(data = read.csv("clean_data/Permanent plot metadata.csv"))
 
