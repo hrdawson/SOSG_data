@@ -1,7 +1,9 @@
 # Load packages
 library(tidyverse)
 library(tidylog)
-library(Li6400Helper)
+# library(Li6400helper)
+
+source("R/functions/Li6400Helper--Li6400Import_revised.R")
 
 # If you don't already have `Li6400Helper`, unhash this code and run it
 # install.packages("remotes")
@@ -13,7 +15,7 @@ library(Li6400Helper)
 # We need custom functions to read in all the files
 # Set your cursor in the FIRST line of this bit of code and press run to store the function in your environment
 Li6400Import_Data = function(file) {
-  data1 = Li6400Import(file)
+  data1 = Li6400Import(file) # Use the custom script in `functions`
 # data2 = data1$data %>%
   data2 = data1 %>%
   # This is a workaround
@@ -29,6 +31,8 @@ Li6400Import_Data = function(file) {
 # Make a list of all your LI6400 files
 SR_file_list = dir(path = "raw_data/LI6400_SR/LI6400_files/subset",
                    full.names = TRUE, recursive = TRUE)
+
+temp_SR_data = purrr::map_dfr(SR_file_list, Li6400Import_Data)
 
 # Read in all the SR data
 # For this next step, put your cursor onto the FIRST line (`temp_SR`) before clicking run
@@ -110,9 +114,11 @@ library(tidylog)
 # Well, except for the instances that the LICOR restarted in the middle of a file...
 # Before we deal with those, let's decipher the remarks so that they make sense
 
+# temp_SR = read.csv("outputs/2024.10.29_LI6400_SR_AllCombined_Dormant.csv")
+
 SR_noOddballs = temp_SR_wide %>%
   # Filter out non-obs
-  drop_na(EFFLUX) %>%
+  drop_na(EFFLUX) |>
   # write.csv("outputs/2024.10.29_LI6400_SR_AllCombined_Dormant.csv", row.names = FALSE)
   separate(remark, into = c("remark.timestamp", "Remarks"), sep = " ") %>%
   separate(Remarks, into = c("X1", "X2", "X3"), remove = FALSE) %>%
@@ -126,12 +132,14 @@ SR_noOddballs = temp_SR_wide %>%
   separate(plotNr, into = c("siteID", "habitat_abbrv", "understory_abbrv", "rep", "fluxType"),
            sep = "-",
            remove = FALSE) |>
-  relocate(siteID, plotNr, Remarks, habitat_abbrv, X2, understory_abbrv, X3, X1, .after = Obs) |>
+  # Filter to just the averaged efflux (final value)
+  # filter(C2avg == 420) |>
   # Code other useful variables
   mutate(habitat = case_when(
     siteID %in% c("gu", "sp", "2k") & habitat_abbrv == "f" | X2 == "f" ~ "Forested",
     siteID %in% c("gu", "sp", "2k") & habitat_abbrv == "o" | X2 %in% c("o", "g") ~ "Open",
-    siteID == "pi" & (X2 == "g" | understory_abbrv == "g") ~ "Open",
+    # siteID %in% c("pi") & (X2 == "g" | understory_abbrv == "g") ~ "Open",
+    siteID == "sp" & habitat_abbrv == "g" ~ "Open",
     siteID == "pi" & X2 == "f" ~ "Forested",
     siteID == "gu" & fileDate == "2024.10.04" ~ "Open",
     siteID == "aq" & understory_abbrv == "f" ~ "Forested",
@@ -144,17 +152,113 @@ SR_noOddballs = temp_SR_wide %>%
     understory_abbrv == "x" | X3 == "x" ~ "unspecified",
     siteID == "2k" ~ "unspecified",
     TRUE ~ NA)) |>
-  relocate(habitat, .after = X2) |> relocate(understory, .after = X3)
+  rename(habitat_remarks = X2, understory_remarks = X3,
+         habitat_file = habitat_abbrv, understory_file = understory_abbrv,
+         plot_file = plotNr, plot_remarks = Remarks, collar_Nr = X1) |>
+  relocate(siteID, plot_file, plot_remarks, fileDate,
+           habitat_file, habitat_remarks, habitat,
+           understory_file, understory_remarks, understory, collar_Nr, .after = Obs)
+
+# write.csv(SR_noOddballs, "outputs/2025.01.28_LI6400_DataCombined.csv", row.names = FALSE)
 
 # Visualise the data
-ggplot(SR_noOddballs |> filter(EFFLUX > 0) |>
+ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") |>
          mutate(siteID = factor(siteID, levels = c("sp", "aq", "pi", "2k", "gu"))),
        aes(x = siteID, y = EFFLUX, colour = habitat, fill = habitat)) +
   geom_violin() +
   geom_boxplot(alpha = 0, colour = "grey80") +
   scale_y_log10() +
-  facet_grid(~ habitat) +
+  # facet_grid(~ habitat) +
   theme_bw()
+
+# Find the oddballs
+
+SR_missing_habitat = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  filter(is.na(habitat))
+
+SR_missing_understory = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  filter(is.na(understory))
+
+SR_mismatch_habitat = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  filter(habitat_file != habitat_remarks) |>
+  arrange(HHMMSS, Obs)
+
+SR_mismatch_understory = SR_noOddballs |>
+  filter(understory_file != understory_remarks) |>
+  relocate(understory_file, understory_remarks, understory, .after = plot_remarks) |>
+  arrange(fileDate, Obs)
+
+SR_EFFLUX = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  filter(EFFLUX > 10 | EFFLUX < 0.7) |>
+  arrange(EFFLUX) |>
+  relocate(EFFLUX, siteID, habitat, understory, .after = plot_remarks) |>
+  select(-flag_quality)
+
+hist(SR_noOddballs$H2OS)
+
+ggplot(SR_noOddballs |> filter(flag_quality != "discard") |>
+         mutate(siteID = factor(siteID, levels = c("sp", "aq", "pi", "2k", "gu")),
+                flag_data = factor(flag_data, levels = c("Okay", "efflux_suspect", "RH_suspect", "Tair_suspect", "CO2_suspect"))),
+       aes(x = siteID, y = EFFLUX, colour = flag_data)) +
+  geom_jitter() +
+  scale_colour_manual(values = c("grey70", "red", "orange", "yellow")) +
+  # scale_y_log10() +
+  # facet_grid(~ habitat) +
+  theme_bw()
+
+# Data by site and campaign
+SR_duplicates = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  # filter(siteID != "aq") |>
+  group_by(siteID, campaign, habitat) |>
+  summarize(n = length(Obs))
+
+SR_check = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  group_by(campaign, siteID, habitat) |>
+  summarize(n = length(Obs)) |>
+  pivot_wider(names_from = siteID, values_from = n)
+
+SR.subset = function(site, campaignID){
+  SR_noOddballs |>
+    # filter(flag_quality != "discard") |>
+    filter(siteID == site) |>
+    filter(campaign == campaignID) |>
+    relocate(siteID, campaign, flag_quality, .after = collar_remarks) |>
+    relocate(habitat, understory, flag_plot, .after = plot_remarks) |>
+    arrange(HHMMSS)
+}
+
+SR_site_campaign = SR.subset("aq", "Greening up")
+
+SR_sp_dormant = SR.subset("sp", "Dormant")
+
+# Work with just Aqueduct ----
+library(ggh4x)
+
+AQ.dormant = SR_noOddballs |>
+  filter(siteID == "aq") |>
+  # just the final flux readout
+  filter(C2avg == 420)
+
+ggplot(AQ.dormant |> filter(EFFLUX >= 0),
+       aes(x = understory, y = EFFLUX, colour = understory, fill = understory)) +
+  # geom_violin() +
+  geom_boxplot(alpha = 0.7) +
+  scale_colour_manual(values = c("gold2", "dodgerblue3")) +
+  scale_fill_manual(values = c("gold2", "dodgerblue3")) +
+  # scale_y_log10() +
+  facet_grid(~habitat) +
+  labs(x = "", y = "CO2 efflux") +
+  scale_x_discrete(guide = "axis_nested") +
+  theme_bw() +
+  theme(text = element_text(size = 20))
+
+ggsave("outputs/2024.12.10_SoilResp.png")
 
 # Let's deal with those now.
 

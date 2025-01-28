@@ -23,20 +23,24 @@ SR_noOddballs = temp_SR_wide %>%
     habitat_file == habitat_remarks & habitat_file == "o" ~ "Open",
   ),
   flag_quality = case_when(
-    siteID == "sp" & habitat_remarks == "moved" & fileDate == '2024.10.01' ~ "okay",
+    # SP
     siteID == "sp" & plot_file == "sp-o-g-01-sr" & Obs %in% c("16", "32", "47") ~ "discard", #bad run
     siteID == "sp" & Obs == 41 & fileDate == '2024.10.01' ~ "discard",
-    # siteID == "aq" & plot_remarks == "2-o-g" & fileDate == "2024.10.03" ~ "discard",
+    siteID == "sp" & fileDate == "2024-12-04" & Obs %in% c("409", "420", "431") ~ "discard", # Moved
+    siteID == "sp" & habitat_remarks == "moved" & fileDate == '2024.10.01' ~ "okay", # Collar moved but measurements were fine
+    # AQ
     siteID == "aq" & fileDate == "2024.10.03" & plot_remarks == "1-f-s" & Obs %in% c("40", "50", "69") ~ "discard", # Moved
     siteID == "aq" & fileDate == "2025.01.08" & plot_file == "aq-f-o-s-g-sr" & Obs %in% c("258") ~ "discard",
     siteID == "aq" & fileDate == "2025.01.08" & plot_file == "aq-f-o-s-g-sr-2.0" & Obs %in% c("42") ~ "discard",
-    siteID == "pi" & fileDate == "2024-12-04" & is.na(habitat_remarks) ~ "double_check",
     siteID == "aq" & fileDate == "2024-12-06" & Obs == "141" ~ "discard",
-    siteID == "pi" & fileDate == "2024-10-04" & Obs %in% c("60", "73", "76") ~ "discard", # Equipment
-    siteID == "sp" & fileDate == "2024-12-04" & Obs %in% c("409", "420", "431") ~ "discard", # Moved
     siteID == "aq" & plot_remarks == "aq-f-g-1-sr" & Obs == "91" ~ "discard", # Unknown treatment,
+    #PI
+    siteID == "pi" & fileDate == "2024-12-04" & is.na(habitat_remarks) ~ "double_check",
+    siteID == "pi" & fileDate == "2024-10-04" & Obs %in% c("60", "73", "76") ~ "discard", # Equipment
+    # Counter statement
     TRUE ~ "okay"
   )) |>
+  # Set campaign names
   mutate(campaign = case_when(
     HHMMSS %within% interval("2024-09-30", "2024-10-10") ~ "Dormant",
     HHMMSS %within% interval("2024-11-30", "2024-12-08") ~ "Greening up",
@@ -50,29 +54,35 @@ SR_noOddballs = temp_SR_wide %>%
   mutate(
     date = date(HHMMSS),
     flag_plot = case_when(
-      # Dormant
+      # Dormant SP
       siteID == "sp" & plot_file == "sp-o-g-01-sr" & Obs %in% c("63", "79", "96") ~ "make_open_unspecified",
       is.na(habitat) & siteID == "sp" & fileDate == "2024.10.01" ~ "file_correct",
-      is.na(habitat) & siteID == "gu" & fileDate == "2024.10.02" ~ "file_correct",
+      # Dormant 2K
       is.na(habitat) & siteID == "2k" & fileDate == "2024.10.2" ~ "file_correct",
-      # AQ Dormant
+      # Dormant AQ
       is.na(habitat) & siteID == "aq" & HHMMSS %in% c("2024-10-03 15:11:21", "2024-10-03 15:12:19", "2024-10-03 15:13:28") ~ "understory_incorrect_use_grass",
       is.na(habitat) & siteID == "aq" & HHMMSS %in% c("2024-10-03 15:17:36", "2024-10-03 15:18:43", "2024-10-03 15:19:51") ~ "both_agree",
       siteID == "aq" & fileDate == "2024.10.03" & Obs %in% c("73", "83", "93") ~ "make_forest_unspecified",
       siteID == "aq" & fileDate == "2024.10.03" & plot_remarks == "3-o-g" ~ "make_open_unspecified",
       is.na(habitat) & siteID == "aq" & fileDate == "2024.10.03" & plot_remarks %in% c("1-f-g") ~ "both_agree",
       is.na(habitat) & siteID == "aq" & fileDate == "2024.10.03" ~ "remarks_correct",
+      # Dormant PI
       is.na(habitat) & siteID == "pi" & fileDate == "2024-10-04" ~ "remarks_correct",
       is.na(habitat) & siteID == "pi" & fileDate == "2024-10-04" ~ "file_correct",
+      # Dormant GU
       is.na(habitat) & siteID == "gu" & fileDate == "2024.10.04" & is.na(habitat_file) ~ "make_open",
+      is.na(habitat) & siteID == "gu" & fileDate == "2024.10.02" ~ "file_correct",
+      # Greening up SP
       is.na(habitat) & siteID == "sp" & fileDate == "2024-12-04" & plot_remarks != "08-0.2" ~ "remarks_correct",
-      is.na(habitat) & siteID == "pi" & fileDate == "2024-12-04" & is.na(habitat_remarks) ~ "make_forest",
       is.na(habitat) & siteID == "sp" & fileDate == "2024-12-04" & plot_remarks == "08-0.2" ~ "make_open",
-      # Aqueduct 2024-12-06
+      # Greening up PI
+      is.na(habitat) & siteID == "pi" & fileDate == "2024-12-04" & is.na(habitat_remarks) ~ "make_forest",
+      # Greening up AQ
       siteID == "aq" & plot_remarks == "control-aq-f" ~ "make_forest_unspecified",
       siteID == "aq" & plot_remarks == "aq-o-g-2-sr" & Obs == 145 ~ "make_forest_unspecified",
       siteID == "aq" & plot_remarks == "control-g-aq" ~ "make_open_unspecified",
       siteID == "aq" & fileDate == "2024-12-06" & Obs %in% c("10", "20", "30") ~ "remarks_correct",
+      siteID == "aq" & plot_file == "aq-f-o-sr-3.0" & plot_remarks == "aq-o-g-3-sr" ~ "remarks_correct",
       is.na(habitat) & siteID == "aq" & fileDate == "2024-12-05" & Obs %in% c("40", "50", "60") ~ "make_open_shrub",
       is.na(habitat) & siteID == "aq" & fileDate == "2024-12-05" & Obs %in% c("70", "12", "23", "34") ~ "make_forest_grass",
       is.na(habitat) & siteID == "aq" & fileDate == "2024-12-05" & Obs %in% c("47", "61", "75") ~ "make_forest_shrub",
@@ -97,12 +107,14 @@ SR_noOddballs = temp_SR_wide %>%
                                                                                               "162", "172", "178", "182") ~ "remarks_correct",
       is.na(habitat) & siteID == "aq" & fileDate == "2025.01.08" & plot_file == "aq-f-o-s-g-sr-2.0" & Obs %in% c("52", "62") ~ "make_open_shrub",
       is.na(habitat) & siteID == "aq" & fileDate == "2025.01.08" & plot_file == "aq-f-o-s-g-sr-2.0" & Obs %in% c("10") ~ "make_open_grass",
-      # is.na(habitat) & habitat_file == habitat_remarks & understory_file == understory_remarks ~ "both_agree",
-      is.na(habitat) & understory_file == understory_remarks & habitat_file != habitat_remarks ~ "habitat_disagree",
+      # Broad statements
+      ## AQ
       is.na(habitat) & siteID == "aq" & understory_file != understory_remarks & habitat_file == habitat_remarks ~ "understory_disagree",
+      ## Other sites
+      is.na(habitat) & understory_file == understory_remarks & habitat_file != habitat_remarks ~ "habitat_disagree",
       is.na(habitat) & siteID %in% c("gu", "sp", "2k", "pi") & habitat_file != habitat_remarks ~ "habitat_disagree",
       is.na(habitat) & fileDate == "2024-12-05" & collar_remarks == "control" ~ "remove_understory",
-      # is.na(habitat) & siteID == "aq" & habitat_file != habitat_remarks & understory_file != understory_remarks ~ "both_disagree",
+      # Counter statement
     siteID %in% c("gu", "sp", "2k", "pi") & habitat_file == habitat_remarks ~ "okay",
     )
   ) |>
@@ -118,23 +130,13 @@ SR_noOddballs = temp_SR_wide %>%
       fileDate == "2024-12-05" & plot_remarks == "control-g-aq" ~ "Open",
       flag_plot %in% c("make_open", "make_open_grass", "make_open_shrub", "make_open_unspecified") ~ "Open",
       flag_plot %in%  c("make_forest", "make_forest_shrub", "make_forest_unspecified", "make_forest_grass") ~ "Forested",
-    # siteID %in% c("gu", "sp", "2k") & habitat_file == "f" | habitat_remarks == "f" ~ "Forested",
-    # siteID %in% c("gu", "sp", "2k") & habitat_file == "o" | habitat_remarks %in% c("o", "g") ~ "Open",
-    # siteID %in% c("pi") & (X2 == "g" | understory_abbrv == "g") ~ "Open",
-    # siteID == "sp" & habitat_file == "g" ~ "Open",
-    # siteID == "pi" & habitat_remarks == "f" ~ "Forested",
-    # siteID == "gu" & fileDate == "2024.10.04" ~ "Open",
-    # siteID == "aq" & understory_file == "f" ~ "Forested",
-    # siteID == "aq" & understory_file == "o" ~ "Open",
-    # siteID == "pi" & habitat_file == "f" ~ "Forested",
-    # fileDate == "2024-12-05" & plot_remarks == "aq-o-g-2-sr" ~ "Open",
-
-    # fileDate == "2024.10.03" & plot_remarks == "3-f-g" ~ "Forest",
     TRUE ~ NA
   ),
   understory = case_when(
+    # Coerce unspecifieds
     siteID %in% c("2k", "sp", "pi", "gu") ~ "unspecified",
     flag_plot %in% c("remove_understory", "make_forest_unspecified", "make_open_unspecified") ~ "unspecified",
+    # Aqueduct
     siteID == "aq" & campaign == "January" & Obs %in% c("42", "50", "55", "68") ~ "Shrub",
     flag_plot == "remarks_correct" & understory_remarks == "g" ~ "Grass",
     flag_plot == "remarks_correct" & understory_remarks == "s" ~ "Shrub",
@@ -145,15 +147,6 @@ SR_noOddballs = temp_SR_wide %>%
     flag_plot %in%  c("make_forest_shrub", "make_open_shrub") ~ "Shrub",
     is.na(flag_plot) & understory_remarks == "g" ~ "Grass",
     is.na(flag_plot) & understory_remarks == "s" ~ "Shrub",
-    # siteID == "aq" & HHMMSS %in% c("2024-10-03 15:11:21", "2024-10-03 15:12:19", "2024-10-03 15:13:28") ~ "Grass",
-    # siteID == "aq" & understory_file == "g" | understory_remarks == "g" ~ "Grass",
-    # siteID == "aq" & understory_file == "s" | understory_remarks == "s" ~ "Shrub",
-    # understory_file == "x" | understory_remarks == "x" ~ "unspecified",
-    # siteID == "aq" & habitat_file == "s" ~ "Shrub",
-    # siteID == "aq" & X4 == "g" ~ "Grass",
-    # siteID == "aq" & X4 == "s" ~ "Shrub",
-    # siteID %in% c("2k", "sp", "pi", "gu") ~ "unspecified",
-    # fileDate == "2024-12-05" & collar_remarks == "control" ~ "unspecified",
     TRUE ~ NA)) |>
   # Flag data quality
   mutate(flag_data = case_when(
@@ -166,5 +159,3 @@ SR_noOddballs = temp_SR_wide %>%
   relocate(flag_plot, .after = habitat) |>
   relocate(understory, .after = understory_remarks) |>
   relocate(flag_quality)
-
-
