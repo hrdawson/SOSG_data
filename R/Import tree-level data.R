@@ -1,6 +1,7 @@
 # Import tree-level data
 library(tidyverse)
 library(tidylog)
+library(readxl)
 
 source("R/functions/one_to_letter.R")
 

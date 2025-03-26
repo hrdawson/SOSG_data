@@ -55,11 +55,12 @@ Li6400Import <- function(file, sep = "\t") {
       filter(str_detect(Obs, "^[:digit:]")) |>
       # Fill Remarks
       mutate(remark = case_when(
-        row_number() == 1 ~ first.remark,
-        is.na(EFFLUX) ~ Obs,
+        row_number() == 1 ~ as.character(first.remark),
+        is.na(EFFLUX) ~ as.character(Obs),
         TRUE ~ NA
       )) |>
-      fill(remark, .direction = "down")
+      fill(remark, .direction = "down") |>
+      mutate(Obs = as.character(Obs))
       # Select only data rows
       # drop_na(EFFLUX) |>
       # filter(Obs != "Obs")

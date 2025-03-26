@@ -14,6 +14,8 @@ source("R/functions/Li6400Helper--Li6400Import_revised.R")
 
 # We need custom functions to read in all the files
 # Set your cursor in the FIRST line of this bit of code and press run to store the function in your environment
+source("R/functions/Li6400Helper--Li6400Import_revised.R")
+
 Li6400Import_Data = function(file) {
   data1 = Li6400Import(file) # Use the custom script in `functions`
 # data2 = data1$data %>%
@@ -32,15 +34,32 @@ Li6400Import_Data = function(file) {
 SR_file_list = dir(path = "raw_data/LI6400_SR/LI6400_files/subset",
                    full.names = TRUE, recursive = TRUE)
 
-temp_SR_data = purrr::map_dfr(SR_file_list, Li6400Import_Data)
+# temp_SR_data = purrr::map_dfr(SR_file_list, Li6400Import_Data)
 
 # Read in all the SR data
 # For this next step, put your cursor onto the FIRST line (`temp_SR`) before clicking run
-temp_SR_data = map_df(set_names(SR_file_list), function(file) {
+temp_SR_data_raw = map_df(set_names(SR_file_list), function(file) {
   file %>%
     purrr::set_names() %>%
     map_df(~ Li6400Import_Data(file))
 })
+
+# Import the one file that the LI6400 only recorded as an xls
+
+temp_SR_data_xls = read.csv("raw_data/LI6400_SR/field_session_3-3.02.2025/2025.02.06_pi-o-sr_.csv", skip = 9) |>
+  mutate(remark = case_when(
+    Obs == "Remark=" ~ str_remove_all(HHMMSS, "\""),
+    TRUE ~ NA
+  ),
+  File = "raw_data/LI6400_SR/field_session_3-3.02.2025/2025.02.06_pi-o-sr_.csv",
+  HHMMSS = lubridate::ymd_hms(paste0("2025-02-05 ", HHMMSS))) |>
+  fill(remark, .direction = "down") |>
+  filter(str_detect(Obs, '[1:9]')) |>
+  pivot_longer(cols = FTime:Status, values_to = "value", names_to = "variable",
+               values_transform = as.numeric) |>
+  select(Obs, HHMMSS, remark, File, variable, value)
+
+temp_SR_data = bind_rows(temp_SR_data_raw, temp_SR_data_xls)
 
 #
 # ### IMPORTANT ###
@@ -159,17 +178,25 @@ SR_noOddballs = temp_SR_wide %>%
            habitat_file, habitat_remarks, habitat,
            understory_file, understory_remarks, understory, collar_Nr, .after = Obs)
 
-# write.csv(SR_noOddballs, "outputs/2025.01.28_LI6400_DataCombined.csv", row.names = FALSE)
+write.csv(SR_noOddballs, paste0("outputs/", Sys.Date(), "_LI6400_DataCombined.csv"), row.names = FALSE)
 
 # Visualise the data
 ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") |>
+         drop_na(campaign) |>
+         filter(campaign != "January") |>
          mutate(siteID = factor(siteID, levels = c("sp", "aq", "pi", "2k", "gu"))),
-       aes(x = siteID, y = EFFLUX, colour = habitat, fill = habitat)) +
+       aes(x = campaign, y = EFFLUX, colour = habitat, fill = habitat)) +
   geom_violin() +
   geom_boxplot(alpha = 0, colour = "grey80") +
+  # geom_point(position = position_jitterdodge()) +
+  scale_fill_manual(values = c("forestgreen", "skyblue3")) +
+  scale_colour_manual(values = c("forestgreen", "skyblue3")) +
   scale_y_log10() +
-  # facet_grid(~ habitat) +
-  theme_bw()
+  facet_grid(~siteID) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave(paste0("outputs/", Sys.Date(), "_EffluxBySiteAndHabitat_Seasonal.png"))
 
 # Find the oddballs
 
@@ -193,7 +220,7 @@ SR_mismatch_understory = SR_noOddballs |>
 
 SR_EFFLUX = SR_noOddballs |>
   filter(flag_quality != "discard") |>
-  filter(EFFLUX > 10 | EFFLUX < 0.7) |>
+  filter(EFFLUX > 10 | EFFLUX < 1) |>
   arrange(EFFLUX) |>
   relocate(EFFLUX, siteID, habitat, understory, .after = plot_remarks) |>
   select(-flag_quality)
@@ -233,7 +260,7 @@ SR.subset = function(site, campaignID){
     arrange(HHMMSS)
 }
 
-SR_site_campaign = SR.subset("aq", "Greening up")
+SR_site_campaign = SR.subset("gu", "Dormant")
 
 SR_sp_dormant = SR.subset("sp", "Dormant")
 
@@ -241,9 +268,11 @@ SR_sp_dormant = SR.subset("sp", "Dormant")
 library(ggh4x)
 
 AQ.dormant = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
   filter(siteID == "aq") |>
   # just the final flux readout
-  filter(C2avg == 420)
+  filter(Mode == 4) |>
+  filter(understory != "unspecified")
 
 ggplot(AQ.dormant |> filter(EFFLUX >= 0),
        aes(x = understory, y = EFFLUX, colour = understory, fill = understory)) +
@@ -258,34 +287,39 @@ ggplot(AQ.dormant |> filter(EFFLUX >= 0),
   theme_bw() +
   theme(text = element_text(size = 20))
 
-ggsave("outputs/2024.12.10_SoilResp.png")
+# ggsave("outputs/2024.12.10_SoilResp.png")
 
-# Let's deal with those now.
+# Habitat, dieback, and time, all in one go ----
+SR_clean = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  filter(flag_data != "efflux_suspect") |>
+  # Leave off AQ extra sampling for now
+  filter(campaign != "January") |>
+  # Mutate the factors
+  mutate(campaign = factor(campaign, levels = c("Dormant", "Greening up", "Peak green")),
+         siteID = factor(siteID, levels = c("sp", "aq", "pi", "2k", "gu")))
 
-## FIRST work through this on an individual level ##
-test = read.delim("raw_data/LI6400_SR_odd/2024.10.2_2k-f-1-sr", sep = "\t", header = FALSE)
+ggplot(SR_clean,
+       aes(x = campaign, y = EFFLUX, colour = siteID)) +
+  geom_hline(yintercept = 0) +
+  geom_boxplot() +
+  geom_jitter(position = position_jitterdodge()) +
+  scale_colour_viridis_d(option = "C", direction = 1) +
+  facet_grid(habitat ~.) +
 
-test2 = test %>%
-  # Assign IDs to each unique instance of 'OPEN 6.1.4'
-  mutate(datasetID = case_when(
-    V1 == "OPEN 6.1.4" ~ row_number(),
-    TRUE ~ NA
-  )) %>%
-  # Downfill
-  fill(datasetID, .direction = "down")
+  # scale_y_log10() +
+  theme_bw()
 
-test2 %>%
-  # Assign IDs to each unique instance of 'OPEN 6.1.4'
-  mutate(datasetID = case_when(
-    V1 == "OPEN 6.1.4" ~ row_number(),
-    TRUE ~ NA
-  )) %>%
-  # Downfill
-  fill(datasetID, .direction = "down") %>%
-  # from https://luisdva.github.io/rstats/export-iteratively/
-group_by(datasetID) %>% group_map(~.x, .keep = TRUE) %>%
-  walk(~.x %>%  write_delim(file = paste0("raw_data/LI6400_SR/2024.10.2_2k-f-1-sr","-",
-                                          unique(.x$datasetID),".tsv")))
+ggsave("outputs/2025.02.10_Efflux_3campaigns.png")
 
-test3 = Li6400Import("raw_data/LI6400_SR/2024.10.2_2k-f-1-sr-2549.tsv")
+ggplot(SR_clean,
+       aes(x = siteID, y = EFFLUX, colour = campaign)) +
+  geom_hline(yintercept = 0) +
+  geom_boxplot() +
+  geom_jitter(position = position_jitterdodge()) +
+  scale_colour_manual(values = c("gold", "lightgreen", "darkgreen")) +
+  facet_grid(habitat ~.) +
+  theme_bw()
+
+ggsave("outputs/2025.02.10_Efflux_bySite.png")
 

@@ -190,7 +190,10 @@ canopy.data.classes = tree.data.all |>
   # Sum up totals per plot
   group_by(plot, plotNickname) |>
     summarise(scaled.canopy.class = round(sum(canopy.scaled, na.rm = TRUE), 3),
-              scaled.beetle.class = round(sum(beetle.scaled), 3)) |>
+              scaled.beetle.class = round(sum(beetle.scaled), 3),
+              basal.area = round(sum(basal.area.total)),
+              stem.count = length(stem),
+              stem.density = stem.count/0.1) |>
   # Assign classes
   mutate(beetle_category = case_when(
     scaled.canopy.class >= 3.5 & scaled.beetle.class < 0.5 ~ "Healthy canopy w/ few beetles",
@@ -207,6 +210,14 @@ canopy.data.classes = tree.data.all |>
   ) |>
   mutate(plot = round(plot))
 
+canopy.data.gps = canopy.data.classes |>
+  left_join(read.csv("outputs/2024.07.23_plot_metadata.csv")) |>
+  filter(!plotNickname %in% c("SE-Satellite East", "SS-Satellite South", "SW-Satellite West")) |>
+  filter(!plot %in% c(481, 484)) |>
+  select(plot, latitude, longitude, scaled.canopy.class,
+         elev, basal.area:stem.density, canopy_category, tot.prec:temp.dry.q.mean)
+
+write.csv(canopy.data.gps, "outputs/2025.01.13_canopy.data_spatial.csv")
 # write.csv(canopy.data.classes, "outputs/2024.07.23_canopy.data.classes.csv")
 # write.csv(canopy.data.classes, "outputs/2024.03.27_PlotClasses_BasalAreaScaling.csv")
 
