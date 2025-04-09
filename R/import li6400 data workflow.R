@@ -182,6 +182,8 @@ write.csv(SR_noOddballs, paste0("outputs/", Sys.Date(), "_LI6400_DataCombined.cs
 
 # Visualise the data
 ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") |>
+         # Filter to exclude major outliers
+         filter(EFFLUX < 15) |>
          drop_na(campaign) |>
          filter(campaign != "January") |>
          mutate(siteID = factor(siteID, levels = c("sp", "aq", "pi", "2k", "gu"))),
@@ -191,12 +193,106 @@ ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") 
   # geom_point(position = position_jitterdodge()) +
   scale_fill_manual(values = c("forestgreen", "skyblue3")) +
   scale_colour_manual(values = c("forestgreen", "skyblue3")) +
-  scale_y_log10() +
+  # scale_y_log10() +
   facet_grid(~siteID) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggsave(paste0("outputs/", Sys.Date(), "_EffluxBySiteAndHabitat_Seasonal.png"))
+
+ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") |>
+         drop_na(campaign) |>
+         # Filter to exclude major outliers
+         filter(EFFLUX < 15) |>
+         filter(campaign != "January") |>
+         mutate(siteID = factor(siteID, levels = c("sp", "aq", "pi", "2k", "gu"))),
+       aes(x = campaign, y = EFFLUX, colour = habitat, fill = habitat)) +
+  # geom_violin() +
+  geom_boxplot(alpha = 0.4, outlier.shape = NA) +
+  geom_point(position = position_jitterdodge()) +
+  scale_fill_manual(values = c("forestgreen", "skyblue3")) +
+  scale_colour_manual(values = c("forestgreen", "skyblue3")) +
+  # scale_y_log10() +
+  # facet_grid(~siteID) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave(paste0("outputs/", Sys.Date(), "_EffluxbySeason.png"))
+
+library(rmarkdown)
+
+ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") |>
+         # Filter to exclude major outliers
+         filter(EFFLUX < 15) |>
+         drop_na(campaign) |>
+         filter(campaign != "January") |>
+         filter(campaign == "Peak green") |>
+         mutate(siteID = factor(siteID, levels = c("sp", "aq", "pi", "2k", "gu"),
+                                labels = c("Healthy", "Light", "Moderate", "Severe", "All trees dead"))),
+       aes(x = habitat, y = EFFLUX, colour = habitat, fill = habitat)) +
+  # geom_violin() +
+  geom_boxplot(alpha = 0.4, outlier.shape = NA) +
+  geom_point(position = position_jitterdodge()) +
+  scale_fill_manual(values = c("forestgreen", "skyblue3")) +
+  scale_colour_manual(values = c("forestgreen", "skyblue3")) +
+  # scale_y_log10() +
+  facet_grid(~siteID) +
+  labs(y = "CO<sub>2</sub> (umol/m<sup>2</sup>/sec)") +
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.title.y = ggtext::element_markdown())
+
+ggsave(paste0("outputs/", Sys.Date(), "_EffluxBySiteAndHabitat_PeakGreen.png"))
+
+ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") |>
+         # Filter to exclude major outliers
+         filter(EFFLUX < 15) |>
+         drop_na(campaign) |>
+         filter(campaign != "January") |>
+         # filter(campaign == "Peak green") |>
+         mutate(siteID = factor(siteID, levels = c("sp", "aq", "pi", "2k", "gu"),
+                                labels = c("Healthy", "Light", "Moderate", "Severe", "All trees dead"))) |>
+         filter(siteID %in% c("Healthy", "All trees dead")),
+       aes(x = habitat, y = EFFLUX, colour = habitat, fill = habitat)) +
+  # geom_violin() +
+  geom_boxplot(alpha = 0.4, outlier.shape = NA) +
+  geom_point(position = position_jitterdodge()) +
+  scale_fill_manual(values = c("forestgreen", "skyblue3")) +
+  scale_colour_manual(values = c("forestgreen", "skyblue3")) +
+  # scale_y_log10() +
+  facet_grid(~siteID) +
+  labs(y = "CO<sub>2</sub> (umol/m<sup>2</sup>/sec)") +
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.title.y = ggtext::element_markdown())
+
+extreme_SR = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  filter(EFFLUX > 0) |>
+  group_by(habitat, siteID) |>
+  rstatix::get_summary_stats(EFFLUX) |>
+  filter(siteID %in% c("gu", "sp"))
+
+write.csv(extreme_SR, paste0("outputs/", Sys.Date(), "_SummaryStats.csv"), row.names = FALSE)
+
+ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") |>
+         drop_na(campaign) |>
+         filter(campaign != "January") |>
+         mutate(siteID = factor(siteID, levels = c("sp", "aq", "pi", "2k", "gu"),
+                                labels = c("Healthy", "Light", "Moderate", "Severe", "All trees dead"))),
+       aes(x = siteID, y = EFFLUX, colour = habitat, fill = habitat)) +
+  geom_violin() +
+  geom_boxplot(alpha = 0, colour = "grey80") +
+  # geom_point(position = position_jitterdodge()) +
+  scale_fill_manual(values = c("forestgreen", "skyblue3")) +
+  scale_colour_manual(values = c("forestgreen", "skyblue3")) +
+  # scale_y_log10() +
+  # facet_grid(~siteID) +
+  labs(y = "CO<sub>2</sub> (umol/m<sup>2</sup>/sec)", x = "") +
+  theme_bw() +
+  theme(axis.title.y = ggtext::element_markdown())
+
+ggsave(paste0("outputs/", Sys.Date(), "_EffluxBySiteAndHabitat_NoFacet.png"))
 
 # Find the oddballs
 
@@ -252,7 +348,7 @@ SR_check = SR_noOddballs |>
 
 SR.subset = function(site, campaignID){
   SR_noOddballs |>
-    # filter(flag_quality != "discard") |>
+    filter(flag_quality != "discard") |>
     filter(siteID == site) |>
     filter(campaign == campaignID) |>
     relocate(siteID, campaign, flag_quality, .after = collar_remarks) |>
@@ -260,7 +356,7 @@ SR.subset = function(site, campaignID){
     arrange(HHMMSS)
 }
 
-SR_site_campaign = SR.subset("gu", "Dormant")
+SR_site_campaign = SR.subset("sp", "Senescent")
 
 SR_sp_dormant = SR.subset("sp", "Dormant")
 

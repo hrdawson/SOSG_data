@@ -51,7 +51,11 @@ teabag = teabag.data |>
   # Remove ones eaten by wombat
   filter(!is.na(final_weight)) |>
   # Put in order
-  mutate(site_abbrv = factor(site_abbrv, levels = c("sp", "aq", "pi", "2k", "gu")))
+  mutate(site_abbrv = factor(site_abbrv, levels = c("sp", "aq", "pi", "2k", "gu"),
+                             labels = c("Healthy", "Light", "Moderate", "Severe", "All trees dead")),
+         treatment = factor(treatment, levels = c("GT", "R"),
+                            labels = c("Green Tea", "Rooibos")),
+         habitat = factor(habitat, levels = c("f", "o"), labels = c("Forest", "Open")))
 
 # Visualise ----
 ## Weights -----
@@ -67,13 +71,42 @@ ggplot(teabag |> filter(!is.na(site_abbrv)),
   theme_bw()
 
 # Habitat and site ----
-ggplot(teabag |> filter(!is.na(site_abbrv)),
-       aes(x = habitat, y = loss, colour = habitat, fill = habitat)) +
-  geom_boxplot(alpha = 0.5) +
-  geom_jitter(size = 4) +
+ggplot(teabag |> filter(!is.na(site_abbrv)) |>
+         filter(site_abbrv %in% c("Healthy", "Light", "Moderate")),
+       aes(x = interaction(habitat), y = loss, colour = habitat, fill = habitat)) +
+  geom_violin() +
+  geom_boxplot(alpha = 0, colour = "grey80") +
+  # geom_jitter(position = position_jitterdodge()) +
   scale_fill_manual(values = c("forestgreen", "skyblue3")) +
   scale_colour_manual(values = c("forestgreen", "skyblue3")) +
   facet_grid(treatment~site_abbrv, scales = "free_y") +
-  theme_bw()
+  labs(x = "Habitat", y = "Mass loss (g)") +
+  theme_bw() +
+  theme(legend.position = "none")
 
 ggsave(paste0("outputs/", Sys.Date(), "_Teabags_SiteXhabitat.png"))
+
+ggplot(teabag |> filter(!is.na(site_abbrv)) |>
+         filter(site_abbrv %in% c("Healthy", "Light", "Moderate")),
+       aes(x = interaction(habitat, treatment), y = loss, colour = habitat, fill = habitat)) +
+  # geom_violin() +
+  geom_boxplot(alpha = 0.4, outlier.shape = NA) +
+  geom_jitter(position = position_jitterdodge()) +
+  scale_fill_manual(values = c("forestgreen", "skyblue3")) +
+  scale_colour_manual(values = c("forestgreen", "skyblue3")) +
+  facet_grid(~site_abbrv, scales = "free_y") +
+  labs(x = "Habitat", y = "Mass loss (g)") +
+  theme_bw() +
+  theme(legend.position = "none")
+
+ggplot(teabag |> filter(!is.na(site_abbrv)),
+       aes(x = habitat, y = loss, colour = treatment, fill = treatment)) +
+  geom_violin() +
+  geom_boxplot(alpha = 0, colour = "grey80") +
+  scale_fill_manual(values = c("olivedrab4", "chocolate3")) +
+  scale_colour_manual(values = c("olivedrab4", "chocolate3")) +
+  facet_grid(treatment~site_abbrv, scales = "free_y") +
+  theme_bw() +
+  theme(legend.position = "none")
+
+ggsave(paste0("outputs/", Sys.Date(), "_Teabags_Flavour.png"))

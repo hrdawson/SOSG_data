@@ -1,4 +1,5 @@
 library(tidyverse)
+library(tidylog)
 library(readxl)
 
 # Calculate basal area for permanent plots ----
@@ -156,6 +157,11 @@ tree.data.all.canopy = tree.data.canopy |>
 tree.data.BA.sum = tree.data.all.canopy |>
   group_by(plot) |>
   summarise(basal.area.total = sum(basal.area, na.rm = TRUE))
+
+# # Figure out avg stem size per plot ----
+# tree.data.stem.size = tree.data.all.canopy |>
+#   group_by(plot) |>
+#   rstatix::get_summary_stats(dbh)
 
 # Make dataset that includes plot basal area ----
 

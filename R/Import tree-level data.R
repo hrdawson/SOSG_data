@@ -2,6 +2,7 @@
 library(tidyverse)
 library(tidylog)
 library(readxl)
+library(janitor)
 
 source("R/functions/one_to_letter.R")
 

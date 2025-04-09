@@ -46,7 +46,8 @@ SR_noOddballs = temp_SR_wide %>%
     HHMMSS %within% interval("2024-09-30", "2024-10-10") ~ "Dormant",
     HHMMSS %within% interval("2024-11-30", "2024-12-08") ~ "Greening up",
     HHMMSS %within% interval("2025-01-01", "2025-01-10") ~ "January",
-    HHMMSS %within% interval("2025-02-01", "2025-02-10") ~ "Peak green"
+    HHMMSS %within% interval("2025-02-01", "2025-02-10") ~ "Peak green",
+    HHMMSS %within% interval("2025-03-31", "2025-04-05") ~ "Senescent"
   )) |>
   relocate(siteID, campaign, HHMMSS, plot_file, plot_remarks, fileDate,
            habitat_file, habitat_remarks, habitat,
@@ -128,6 +129,11 @@ SR_noOddballs = temp_SR_wide %>%
       fileDate == "2025.03.07" & Obs %in% c("658", "668", "678") ~ "make_forest_grass", # Checked against field notes
       is.na(habitat) & siteID == "aq" & fileDate == "2025.03.07" ~ "remarks_correct",
       siteID == "aq" & fileDate == "2025.03.07" & understory_remarks == "c" ~ "remove_understory",
+      # Senscent
+      fileDate == "2025.04.02" & plot_remarks == "6-f2k" ~ "file_correct", # based on the order of observations
+      fileDate == "2025.04.01" & plot_remarks %in% c("2-o-s", "2-o-g", "3-o-c", "4-o-g", "5-o-g", "5-o-s") ~ "remarks_correct", # based off common error with remark/file labelling
+      fileDate == "2025.04.03" & plot_remarks %in% c("7-o-sp") ~ "remarks_correct",
+      fileDate == "2025.04.02" & plot_remarks %in% c("8-gu-f") ~ "file_correct",
       # Broad statements
       ## AQ
       is.na(habitat) & siteID == "aq" & understory_file != understory_remarks & habitat_file == habitat_remarks ~ "understory_disagree",
