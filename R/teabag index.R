@@ -86,18 +86,24 @@ ggplot(teabag |> filter(!is.na(site_abbrv)) |>
 
 ggsave(paste0("outputs/", Sys.Date(), "_Teabags_SiteXhabitat.png"))
 
+library(ggh4x)
 ggplot(teabag |> filter(!is.na(site_abbrv)) |>
          filter(site_abbrv %in% c("Healthy", "Light", "Moderate")),
        aes(x = interaction(habitat, treatment), y = loss, colour = habitat, fill = habitat)) +
   # geom_violin() +
   geom_boxplot(alpha = 0.4, outlier.shape = NA) +
-  geom_jitter(position = position_jitterdodge()) +
+  geom_jitter(position = position_jitterdodge(), size = 3) +
   scale_fill_manual(values = c("forestgreen", "skyblue3")) +
   scale_colour_manual(values = c("forestgreen", "skyblue3")) +
   facet_grid(~site_abbrv, scales = "free_y") +
-  labs(x = "Habitat", y = "Mass loss (g)") +
+  scale_x_discrete(guide = "axis_nested") +
+  labs(x = "", y = "Mass loss (g)") +
   theme_bw() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        text = element_text(size = 15))
+
+ggsave(paste0("outputs/", Sys.Date(), "_Teabags_SiteXhabitat_Focal.png"))
+
 
 ggplot(teabag |> filter(!is.na(site_abbrv)),
        aes(x = habitat, y = loss, colour = treatment, fill = treatment)) +

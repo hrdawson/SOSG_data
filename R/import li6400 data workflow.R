@@ -237,10 +237,11 @@ ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") 
   scale_colour_manual(values = c("forestgreen", "skyblue3")) +
   # scale_y_log10() +
   facet_grid(~siteID) +
-  labs(y = "CO<sub>2</sub> (umol/m<sup>2</sup>/sec)") +
+  labs(y = "CO<sub>2</sub> (umol/m<sup>2</sup>/sec)", x = "") +
   theme_bw() +
   theme(legend.position = "none",
-        axis.title.y = ggtext::element_markdown())
+        axis.title.y = ggtext::element_markdown(),
+        text = element_text(size = 15))
 
 ggsave(paste0("outputs/", Sys.Date(), "_EffluxBySiteAndHabitat_PeakGreen.png"))
 
@@ -264,11 +265,14 @@ ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") 
   labs(y = "CO<sub>2</sub> (umol/m<sup>2</sup>/sec)") +
   theme_bw() +
   theme(legend.position = "none",
-        axis.title.y = ggtext::element_markdown())
+        axis.title.y = ggtext::element_markdown(),
+        text = element_text(size = 20))
 
 extreme_SR = SR_noOddballs |>
   filter(flag_quality != "discard") |>
   filter(EFFLUX > 0) |>
+  # Filter to exclude major outliers
+  filter(EFFLUX < 15) |>
   group_by(habitat, siteID) |>
   rstatix::get_summary_stats(EFFLUX) |>
   filter(siteID %in% c("gu", "sp"))
