@@ -206,7 +206,7 @@ ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") 
          filter(EFFLUX < 15) |>
          filter(campaign != "January") |>
          mutate(siteID = factor(siteID, levels = c("sp", "aq", "pi", "2k", "gu"))),
-       aes(x = campaign, y = EFFLUX, colour = habitat, fill = habitat)) +
+       aes(x = interaction(habitat, campaign), y = EFFLUX, colour = habitat, fill = habitat)) +
   # geom_violin() +
   geom_boxplot(alpha = 0.4, outlier.shape = NA) +
   geom_point(position = position_jitterdodge()) +
@@ -214,10 +214,16 @@ ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") 
   scale_colour_manual(values = c("forestgreen", "skyblue3")) +
   # scale_y_log10() +
   # facet_grid(~siteID) +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  labs(y = "CO<sub>2</sub> efflux (umol/m<sup>2</sup>/sec)", x = "") +
+  scale_x_discrete(guide = "axis_nested") +
+  theme_classic() +
+  theme(legend.position = "none",
+        panel.border = element_rect(fill = NA),
+        axis.title.y = ggtext::element_markdown(),
+        text = element_text(size = 25))
 
-ggsave(paste0("outputs/", Sys.Date(), "_EffluxbySeason.png"))
+ggsave(paste0("outputs/", Sys.Date(), "_EffluxbySeason.png"),
+       width = 14, height = 8, units = "in")
 
 library(rmarkdown)
 
@@ -237,13 +243,15 @@ ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") 
   scale_colour_manual(values = c("forestgreen", "skyblue3")) +
   # scale_y_log10() +
   facet_grid(~siteID) +
-  labs(y = "CO<sub>2</sub> (umol/m<sup>2</sup>/sec)", x = "") +
-  theme_bw() +
+  labs(y = "CO<sub>2</sub> efflux (umol/m<sup>2</sup>/sec)", x = "") +
+  theme_classic() +
   theme(legend.position = "none",
+        panel.border = element_rect(fill = NA),
         axis.title.y = ggtext::element_markdown(),
-        text = element_text(size = 15))
+        text = element_text(size = 25))
 
-ggsave(paste0("outputs/", Sys.Date(), "_EffluxBySiteAndHabitat_PeakGreen.png"))
+ggsave(paste0("outputs/", Sys.Date(), "_EffluxBySiteAndHabitat_PeakGreen.png"),
+       width = 12, height = 8, units = "in")
 
 ggplot(SR_noOddballs |> filter(EFFLUX > 0) |> filter(flag_quality != "discard") |>
          # Filter to exclude major outliers
@@ -273,6 +281,7 @@ extreme_SR = SR_noOddballs |>
   filter(EFFLUX > 0) |>
   # Filter to exclude major outliers
   filter(EFFLUX < 15) |>
+  filter(campaign == "Peak green") |>
   group_by(habitat, siteID) |>
   rstatix::get_summary_stats(EFFLUX) |>
   filter(siteID %in% c("gu", "sp"))
