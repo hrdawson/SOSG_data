@@ -132,8 +132,14 @@ SR_noOddballs = temp_SR_wide %>%
       # Senscent
       fileDate == "2025.04.02" & plot_remarks == "6-f2k" ~ "file_correct", # based on the order of observations
       fileDate == "2025.04.01" & plot_remarks %in% c("2-o-s", "2-o-g", "3-o-c", "4-o-g", "5-o-g", "5-o-s") ~ "remarks_correct", # based off common error with remark/file labelling
-      fileDate == "2025.04.03" & plot_remarks %in% c("7-o-sp") ~ "remarks_correct",
+      fileDate == "2025.04.03" & siteID == "sp" & Obs %in% c("133", "151", "172") ~ "make_forest",
       fileDate == "2025.04.02" & plot_remarks %in% c("8-gu-f") ~ "file_correct",
+      fileDate == "2025.04.01" & Obs %in% c("47", "65", "84") ~ "make_forest_shrub",
+      fileDate == "2025.04.01" & Obs %in% c("106", "131", "158") ~ "make_open_grass",
+      fileDate == "2025.04.01" & Obs %in% c("174", "191", "210") ~ "make_open_shrub",
+      fileDate == "2025.04.01" & Obs %in% c("224", "238", "252") ~ "make_forest_shrub",
+      fileDate == "2025.04.01" & Obs %in% c("494", "506", "518") ~ "make_open_shrub",
+      fileDate == "2025.04.01" & Obs %in% c("583", "593", "603") ~ "make_forest_grass",
       # Broad statements
       ## AQ
       is.na(habitat) & siteID == "aq" & understory_file != understory_remarks & habitat_file == habitat_remarks ~ "understory_disagree",
