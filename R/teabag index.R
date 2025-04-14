@@ -50,12 +50,17 @@ teabag = teabag.data |>
     loss = post_dry_weight - final_weight) |>
   # Remove ones eaten by wombat
   filter(!is.na(final_weight)) |>
+  # Add in dates
+  mutate(burial_date = ymd("2024-11-16"),
+         recover_date = ymd("2025-02-04") # This needs changing for each site
+         ) |>
   # Put in order
   mutate(site_abbrv = factor(site_abbrv, levels = c("sp", "aq", "pi", "2k", "gu"),
                              labels = c("Healthy", "Light", "Moderate", "Severe", "All trees dead")),
          treatment = factor(treatment, levels = c("GT", "R"),
                             labels = c("Green Tea", "Rooibos")),
-         habitat = factor(habitat, levels = c("f", "o"), labels = c("Forest", "Open")))
+         habitat = factor(habitat, levels = c("f", "o"), labels = c("Forested", "Open")))
+
 
 # Visualise ----
 ## Weights -----
@@ -88,8 +93,9 @@ ggsave(paste0("outputs/", Sys.Date(), "_Teabags_SiteXhabitat.png"))
 
 library(ggh4x)
 ggplot(teabag |> filter(!is.na(site_abbrv)) |>
-         filter(site_abbrv %in% c("Healthy", "Light", "Moderate")),
-       aes(x = interaction(habitat, treatment), y = loss, colour = habitat, fill = habitat)) +
+         filter(site_abbrv %in% c("Healthy", "Light", "Moderate")) |>
+         filter(treatment == "Rooibos"),
+       aes(x = habitat, y = loss, colour = habitat, fill = habitat)) +
   # geom_violin() +
   geom_boxplot(alpha = 0.4, outlier.shape = NA) +
   geom_jitter(position = position_jitterdodge(), size = 3) +
@@ -98,11 +104,14 @@ ggplot(teabag |> filter(!is.na(site_abbrv)) |>
   facet_grid(~site_abbrv, scales = "free_y") +
   scale_x_discrete(guide = "axis_nested") +
   labs(x = "", y = "Mass loss (g)") +
-  theme_bw() +
+  theme_classic() +
   theme(legend.position = "none",
-        text = element_text(size = 15))
+        panel.border = element_rect(fill = NA),
+        axis.title.y = ggtext::element_markdown(),
+        text = element_text(size = 25))
 
-ggsave(paste0("outputs/", Sys.Date(), "_Teabags_SiteXhabitat_Focal.png"))
+ggsave(paste0("outputs/", Sys.Date(), "_Teabags_SiteXhabitat_Focal.png"),
+       width = 14, height = 8, units = "in")
 
 
 ggplot(teabag |> filter(!is.na(site_abbrv)),
