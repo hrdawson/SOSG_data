@@ -51,6 +51,9 @@ SR_noOddballs = temp_SR_wide %>%
     siteID == "aq" & fileDate == "2024-12-05" & plot_remarks == "aq-o-g-3-sr" & Obs %in% c("10", "24", "37") ~ "discard",
     siteID == "pi" & fileDate == "2024-12-04" & plot_remarks == "pi-f-s-02-sr" & Obs %in% c("63", "73", "83") ~ "discard",
     siteID == "gu" & fileDate == "2025.04.02" & habitat == "Forested" & Obs %in% c("100", "110", "120") ~ "discard", # Earth star
+    siteID == "2k" & fileDate == "2025.04.02" & habitat == "Forested" & Obs %in% c("162") ~ "discard", #restarted
+    siteID == "pi" & fileDate == "2025.04.03" & Obs %in% c("23", "45", "68") ~ "discard", #restarted
+    siteID == "2k" & fileDate == "2024-12-05" & Obs %in% c("11", "22", "33") ~ "discard", #doublecheck this with Leo
     Smpls < 10 ~ "discard", # Too few reads for an accurate flux calculation
     EFFLUX < 0 ~ "discard", # Invalid read for respiration
     # Counter statement
@@ -135,8 +138,9 @@ SR_noOddballs = temp_SR_wide %>%
       fileDate == "2025.02.05" & Obs %in% c("393", "403", "413") ~ "make_forest_shrub", # Checked against field notes
       siteID == "gu" & fileDate == "2025.02.04" & is.na(habitat_file) & habitat_remarks == "o" ~ "make_open",
       siteID == "2k" & fileDate == "2025.02.03" & habitat_file == "o" ~ "make_open",
-      siteID == "aq" & fileDate == "2025.02.05" ~ "remarks_correct",
       siteID == "sp" & fileDate == "2025.02.06" & plot_file == "sp-f-sr" ~ "make_forest",
+      siteID == "aq" & fileDate == "2025.02.05" & Obs %in% c("359") ~ "make_open_grass",
+      siteID == "aq" & fileDate == "2025.02.05" ~ "remarks_correct",
       # AQ March
       fileDate == "2025.03.07" & Obs %in% c("147", "161", "175") ~ "make_forest_grass", # Checked against field notes
       fileDate == "2025.03.07" & Obs %in% c("583", "595", "608") ~ "make_open_shrub", # Checked against field notes
@@ -203,6 +207,7 @@ SR_noOddballs = temp_SR_wide %>%
     campaign == "Dormant" & siteID == "sp" & is.na(nr_remarks) ~ 1,
     campaign == "Dormant" & siteID == "gu" & is.na(nr_remarks) ~ 1,
     campaign == "Dormant" & siteID == "gu" & Obs %in% c("57", "75", "94") ~ 4,
+    campaign == "Greening up" & siteID == "sp" & habitat == "Open" & Obs %in% c("375", "387", "399") ~ 7,
     campaign == "Greening up" & siteID == "pi" & Obs %in% c("93", "105", "117") ~ 3,
     campaign == "Greening up" & siteID == "pi" & habitat == "Forested" & is.na(nr_remarks) ~ 5,
     campaign == "Greening up" & siteID == "pi" & habitat == "Forested" & Obs %in% c("95", "106", "118") ~ 4,
@@ -210,6 +215,11 @@ SR_noOddballs = temp_SR_wide %>%
     campaign == "Greening up" & siteID == "pi" & habitat == "Forested" & Obs %in% c("158", "168", "178") ~ 2,
     campaign == "Greening up" & siteID == "pi" & habitat == "Forested" & Obs %in% c("182", "192", "202") ~ 3,
     campaign == "Greening up" & siteID == "pi" & habitat == "Forested" & Obs %in% c("212") ~ 6,
+    campaign == "Greening up" & siteID == "sp" & habitat == "Forested" & Obs %in% c("233", "247", "261") ~ 6,
+    campaign == "Greening up" & siteID == "sp" & habitat == "Open" & Obs %in% c("55") ~ 2,
+    campaign == "Greening up" & siteID == "sp" & habitat == "Open" & Obs %in% c("145", "160", "177") ~ 4,
+    campaign == "Greening up" & siteID == "sp" & habitat == "Open" & Obs %in% c("332", "347", "363") ~ 6,
+    campaign == "Greening up" & siteID == "2k" & habitat == "Forested" & Obs %in% c("43", "53", "63") ~ 1,
     campaign == "Peak green" & siteID == "2k" & habitat == "Open" & Obs %in% c("10", "20", "30") ~ 8,
     campaign == "Peak green" & siteID == "2k" & habitat == "Open" & Obs %in% c("100", "110", "120") ~ 5,
     campaign == "Peak green" & siteID == "gu" & habitat == "Open" & Obs %in% c("250", "262", "274") ~ 7,
@@ -229,11 +239,15 @@ SR_noOddballs = temp_SR_wide %>%
     campaign == "Peak green" & siteID == "pi" & habitat == "Forested" & Obs %in% c("226", "236", "246") ~ 4,
     campaign == "Peak green" & siteID == "sp" & habitat == "Forested" & Obs %in% c("175", "185", "195") ~ 2,
     campaign == "Peak green" & siteID == "sp" & habitat == "Forested" & Obs %in% c("14", "29", "45") ~ 5,
+    campaign == "Peak green" & siteID == "aq" & habitat == "Open" & Obs %in% c("453", "463", "473") ~ 5,
     campaign == "Senescent" & siteID == "aq" & Obs %in% c("224", "238", "252") ~ 2,
     campaign == "Senescent" & siteID == "aq" & Obs %in% c("494", "518", "506") ~ 4,
     campaign == "Senescent" & siteID == "gu" & habitat == "Open" & Obs %in% c("82", "103", "134") ~ 2,
     campaign == "Senescent" & siteID == "gu" & habitat == "Forested" & Obs %in% c("100", "110", "120") ~ 2,
     campaign == "Senescent" & siteID == "gu" & habitat == "Forested" & Obs %in% c("214", "228", "242") ~ 3,
+    campaign == "Senescent" & siteID == "2k" & habitat == "Open" & Obs %in% c("58", "70", "83") ~ 2,
+    campaign == "Senescent" & siteID == "pi" & habitat == "Forested" & Obs %in% c("174", "164", "184") ~ 7,
+    campaign == "Senescent" & siteID == "pi" & habitat == "Forested" & Obs %in% c("319", "333", "345") ~ 5, # revisit this one
     siteID == "aq" & understory == "unspecified" ~ 3,
     TRUE ~ as.numeric(nr_remarks)
   )) |>
@@ -248,3 +262,4 @@ SR_noOddballs = temp_SR_wide %>%
   relocate(flag_plot, .after = habitat) |>
   relocate(understory, .after = understory_remarks) |>
   relocate(flag_quality)
+

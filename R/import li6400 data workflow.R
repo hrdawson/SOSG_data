@@ -345,7 +345,7 @@ SR.subset = function(site, campaignID){
     arrange(HHMMSS)
 }
 
-SR_site_campaign = SR.subset("gu", "Senescent")
+SR_site_campaign = SR.subset("2k", "Greening up")
 
 SR_sp_dormant = SR.subset("sp", "Dormant")
 
