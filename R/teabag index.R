@@ -2,8 +2,6 @@
 ## Read in data--this is a bit complicated
 library(openxlsx2)
 
-teabag.test = read_xlsx("raw_data/tea_bag_labels_2025.xlsb")
-
 teabag.data = read_xlsx("raw_data/tea_bag_labels_2025.xlsb", rows = c(2:162), cols = 7:15, na.strings = c("NA", "")) |>
   add_column(set = "data")
 
@@ -17,7 +15,8 @@ teabag.data = read_xlsx("raw_data/tea_bag_labels_2025.xlsb", rows = c(2:162), co
 #          'Post dry weight' = as.numeric(`Post dry weight`))
 
 # Metadata about which collars are useable ----
-teabag.flags = read_xlsx("raw_data/teabags_labels+collars+treatment_noweight.xlsx", start_row = 2, start_col = 2)
+teabag.flags = read_xlsx("raw_data/teabags_labels+collars+treatment_noweight_version2.xlsx",
+                         start_row = 2, start_col = 2)
 
 teabag = teabag.data |>
   # Rename columns with space
@@ -51,8 +50,14 @@ teabag = teabag.data |>
   # Remove ones eaten by wombat
   filter(!is.na(final_weight)) |>
   # Add in dates
-  mutate(burial_date = ymd("2024-11-16"),
-         recover_date = ymd("2025-02-04") # This needs changing for each site
+  mutate(burial_date = case_when(
+           site_abbrv %in% c("pi", "sp") ~ ymd("2024-11-16"),
+           site_abbrv %in% c("gu", "2k", "aq") ~ ymd("2024-11-17"),
+           ),
+         recover_date = case_when(
+           site_abbrv %in% c("pi", "sp") ~ ymd("2025-02-05"),
+           site_abbrv %in% c("gu", "2k", "aq") ~ ymd("2025-02-06"),
+         )
          ) |>
   # Put in order
   mutate(site_abbrv = factor(site_abbrv, levels = c("sp", "aq", "pi", "2k", "gu"),
@@ -61,10 +66,20 @@ teabag = teabag.data |>
                             labels = c("Green Tea", "Rooibos")),
          habitat = factor(habitat, levels = c("f", "o"), labels = c("Forested", "Open")))
 
+teabag.flags = teabag |>
+  group_by(site_abbrv, habitat, treatment) |>
+  summarise(n = length(collar_nr)) |>
+  mutate(flag = case_when(
+    n < 3 ~ "discard",
+    TRUE ~ "okay"
+  ))
+
+teabag.flagged = teabag |>
+  left_join(teabag.flags)
+
+write.csv(teabag.flagged, paste0("outputs/", Sys.Date(), "_TeabagIndex.csv"), row.names = FALSE)
 
 # Visualise ----
-## Weights -----
-ggplot()
 
 ## Colour codes -----
 ggplot(teabag |> filter(!is.na(site_abbrv)),
@@ -92,13 +107,13 @@ ggplot(teabag |> filter(!is.na(site_abbrv)) |>
 ggsave(paste0("outputs/", Sys.Date(), "_Teabags_SiteXhabitat.png"))
 
 library(ggh4x)
-ggplot(teabag |> filter(!is.na(site_abbrv)) |>
-         filter(site_abbrv %in% c("Healthy", "Light", "Moderate")) |>
-         filter(treatment == "Rooibos"),
-       aes(x = habitat, y = loss, colour = habitat, fill = habitat)) +
+ggplot(teabag.flagged |> filter(!is.na(site_abbrv)) |>
+         filter(flag == "okay"),
+       aes(x = interaction(habitat, treatment),
+           y = loss, colour = habitat, fill = habitat)) +
   # geom_violin() +
   geom_boxplot(alpha = 0.4, outlier.shape = NA) +
-  geom_jitter(position = position_jitterdodge(), size = 3) +
+  geom_jitter(position = position_jitterdodge()) +
   scale_fill_manual(values = c("forestgreen", "skyblue3")) +
   scale_colour_manual(values = c("forestgreen", "skyblue3")) +
   facet_grid(~site_abbrv, scales = "free_y") +
@@ -107,11 +122,12 @@ ggplot(teabag |> filter(!is.na(site_abbrv)) |>
   theme_classic() +
   theme(legend.position = "none",
         panel.border = element_rect(fill = NA),
-        axis.title.y = ggtext::element_markdown(),
-        text = element_text(size = 25))
+        axis.title.y = ggtext::element_markdown()
+        # text = element_text(size = 10)
+        )
 
-ggsave(paste0("outputs/", Sys.Date(), "_Teabags_SiteXhabitat_Focal.png"),
-       width = 14, height = 8, units = "in")
+ggsave(paste0("outputs/", Sys.Date(), "_Teabags_SiteXhabitat_Focal_minimalSample.png"),
+       width = 10, height = 5, units = "in")
 
 
 ggplot(teabag |> filter(!is.na(site_abbrv)),

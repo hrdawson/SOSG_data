@@ -4,10 +4,6 @@ SR_noOddballs = temp_SR_wide %>%
   # write.csv("outputs/2024.10.29_LI6400_SR_AllCombined_Dormant.csv", row.names = FALSE)
   separate(remark, into = c("remark.timestamp", "plot_remarks"), sep = " ") %>%
   separate(plot_remarks, into = c("collar_remarks", "habitat_remarks", "understory_remarks", "X4"), sep = "-", remove = FALSE) %>%
-  # Deciphering each column of the remarks
-  mutate(collar_nr = case_when(
-    str_detect(plot_remarks, "[:digit:]") ~ collar_remarks,
-    TRUE ~ NA)) |>
   # Deciphering each part of the file name
   mutate(fileName = basename(File)) |>
   separate(fileName, into = c("fileDate", "plot_file"), sep = "_") |>
@@ -15,8 +11,10 @@ SR_noOddballs = temp_SR_wide %>%
            sep = "-",
            remove = FALSE) |>
   # Filter to just the averaged efflux (final value)
-  # filter(C2avg == 420) |>
   filter(Mode == 4) |>
+  # Find potential collar numbers
+  mutate(nr_remarks = str_extract(plot_remarks, '[1-9]'),
+         nr_file = str_extract(plot_file, '[1-9]')) |>
   # Add in simple habitat controls
   mutate(habitat = case_when(
     habitat_file == habitat_remarks & habitat_file == "f" ~ "Forested",
@@ -37,7 +35,24 @@ SR_noOddballs = temp_SR_wide %>%
     #PI
     siteID == "pi" & fileDate == "2024-12-04" & is.na(habitat_remarks) ~ "double_check",
     siteID == "pi" & fileDate == "2024-10-04" & Obs %in% c("60", "73", "76") ~ "discard", # Equipment
+    #GU
+    fileDate == "2025.02.04" & siteID == "gu" & habitat == "Forested" & Obs %in% c("188") ~ "discard",
+    # Based on standard dev of each three rounds
+    siteID == "aq" & fileDate == "2025.03.07" & plot_remarks == "1-o-g" ~ "discard",
+    siteID == "gu" & fileDate == "2024.10.04" & plot_remarks == "5" ~ "discard",
+    siteID == "2k" & fileDate == "2025.04.02" & plot_remarks == "1-o-2k" ~ "discard",
+    siteID == "2k" & fileDate == "2025.04.02" & plot_remarks == "8-f-2k" ~ "discard",
+    siteID == "gu" & fileDate == "2025.04.02" & Obs == "188" ~ "discard",
+    siteID == "aq" & fileDate == "2025.01.08" & Obs %in% c("274", "284", "294") ~ "discard",
+    siteID == "aq" & fileDate == "2025.02.05" & plot_remarks == "4-f-g-aq" & Obs %in% c("423", "433", "443") ~ "discard",
+    siteID == "aq" & fileDate == "2025.03.07" & plot_remarks == "5-o-g" & Obs %in% c("658", "668", "678") ~ "discard",
+    siteID == "2k" & fileDate == "2025.04.02" & plot_remarks == "6-o-2k" & Obs %in% c("192", "202", "212") ~ "discard",
+    siteID == "2k" & fileDate == "2024-12-05" & plot_remarks == "2k-f-x-3-sr" & Obs %in% c("128", "138", "148") ~ "discard",
+    siteID == "aq" & fileDate == "2024-12-05" & plot_remarks == "aq-o-g-3-sr" & Obs %in% c("10", "24", "37") ~ "discard",
+    siteID == "pi" & fileDate == "2024-12-04" & plot_remarks == "pi-f-s-02-sr" & Obs %in% c("63", "73", "83") ~ "discard",
+    siteID == "gu" & fileDate == "2025.04.02" & habitat == "Forested" & Obs %in% c("100", "110", "120") ~ "discard", # Earth star
     Smpls < 10 ~ "discard", # Too few reads for an accurate flux calculation
+    EFFLUX < 0 ~ "discard", # Invalid read for respiration
     # Counter statement
     TRUE ~ "okay"
   )) |>
@@ -163,7 +178,6 @@ SR_noOddballs = temp_SR_wide %>%
       fileDate == "2024-12-05" & plot_remarks == "control-aq-f" ~ "Forested",
       fileDate == "2024-12-05" & plot_remarks == "control-g-aq" ~ "Open",
       !is.na(habitat) ~ habitat,
-
     TRUE ~ NA
   ),
   understory = case_when(
@@ -183,11 +197,51 @@ SR_noOddballs = temp_SR_wide %>%
     is.na(flag_plot) & understory_remarks == "g" ~ "Grass",
     is.na(flag_plot) & understory_remarks == "s" ~ "Shrub",
     TRUE ~ NA)) |>
+  # Code collar number flag
+  mutate(collar_nr = case_when(
+    campaign == "Dormant" & siteID == "pi" & is.na(nr_remarks) ~ 1,
+    campaign == "Dormant" & siteID == "sp" & is.na(nr_remarks) ~ 1,
+    campaign == "Dormant" & siteID == "gu" & is.na(nr_remarks) ~ 1,
+    campaign == "Dormant" & siteID == "gu" & Obs %in% c("57", "75", "94") ~ 4,
+    campaign == "Greening up" & siteID == "pi" & Obs %in% c("93", "105", "117") ~ 3,
+    campaign == "Greening up" & siteID == "pi" & habitat == "Forested" & is.na(nr_remarks) ~ 5,
+    campaign == "Greening up" & siteID == "pi" & habitat == "Forested" & Obs %in% c("95", "106", "118") ~ 4,
+    campaign == "Greening up" & siteID == "pi" & habitat == "Forested" & Obs %in% c("128", "138", "148") ~ 1,
+    campaign == "Greening up" & siteID == "pi" & habitat == "Forested" & Obs %in% c("158", "168", "178") ~ 2,
+    campaign == "Greening up" & siteID == "pi" & habitat == "Forested" & Obs %in% c("182", "192", "202") ~ 3,
+    campaign == "Greening up" & siteID == "pi" & habitat == "Forested" & Obs %in% c("212") ~ 6,
+    campaign == "Peak green" & siteID == "2k" & habitat == "Open" & Obs %in% c("10", "20", "30") ~ 8,
+    campaign == "Peak green" & siteID == "2k" & habitat == "Open" & Obs %in% c("100", "110", "120") ~ 5,
+    campaign == "Peak green" & siteID == "gu" & habitat == "Open" & Obs %in% c("250", "262", "274") ~ 7,
+    campaign == "Peak green" & siteID == "gu" & habitat == "Open" & Obs %in% c("210", "224", "238") ~ 6,
+    campaign == "Peak green" & siteID == "gu" & habitat == "Open" & Obs %in% c("165", "181", "197") ~ 5,
+    campaign == "Peak green" & siteID == "gu" & habitat == "Open" & Obs %in% c("128", "139", "150") ~ 4,
+    campaign == "Peak green" & siteID == "gu" & habitat == "Open" & Obs %in% c("57", "70", "82") ~ 2,
+    campaign == "Peak green" & siteID == "gu" & habitat == "Forested" & Obs %in% c("230", "240", "250") ~ 1,
+    campaign == "Peak green" & siteID == "pi" & habitat == "Open" & Obs %in% c("118", "128", "139") ~ 4,
+    campaign == "Peak green" & siteID == "pi" & habitat == "Open" & Obs %in% c("149", "159", "169") ~ 5,
+    campaign == "Peak green" & siteID == "pi" & habitat == "Open" & Obs %in% c("180", "191", "202") ~ 6,
+    campaign == "Peak green" & siteID == "pi" & habitat == "Open" & Obs %in% c("213", "224", "234") ~ 7,
+    campaign == "Peak green" & siteID == "pi" & habitat == "Open" & Obs %in% c("245", "255", "265") ~ 8,
+    campaign == "Peak green" & siteID == "pi" & habitat == "Forested" & Obs %in% c("136", "146", "156") ~ 1,
+    campaign == "Peak green" & siteID == "pi" & habitat == "Forested" & Obs %in% c("166", "176", "186") ~ 6,
+    campaign == "Peak green" & siteID == "pi" & habitat == "Forested" & Obs %in% c("196", "206", "216") ~ 2,
+    campaign == "Peak green" & siteID == "pi" & habitat == "Forested" & Obs %in% c("226", "236", "246") ~ 4,
+    campaign == "Peak green" & siteID == "sp" & habitat == "Forested" & Obs %in% c("175", "185", "195") ~ 2,
+    campaign == "Peak green" & siteID == "sp" & habitat == "Forested" & Obs %in% c("14", "29", "45") ~ 5,
+    campaign == "Senescent" & siteID == "aq" & Obs %in% c("224", "238", "252") ~ 2,
+    campaign == "Senescent" & siteID == "aq" & Obs %in% c("494", "518", "506") ~ 4,
+    campaign == "Senescent" & siteID == "gu" & habitat == "Open" & Obs %in% c("82", "103", "134") ~ 2,
+    campaign == "Senescent" & siteID == "gu" & habitat == "Forested" & Obs %in% c("100", "110", "120") ~ 2,
+    campaign == "Senescent" & siteID == "gu" & habitat == "Forested" & Obs %in% c("214", "228", "242") ~ 3,
+    siteID == "aq" & understory == "unspecified" ~ 3,
+    TRUE ~ as.numeric(nr_remarks)
+  )) |>
   # Flag data quality
   mutate(flag_data = case_when(
     EFFLUX > 10 | EFFLUX < 0.7  ~ "efflux_suspect",
     RHirga. > 85 | RHirga. < 35 ~ "RH_suspect",
-    Tair > 30 | Tair < 12 ~ "Tair_suspect",
+    Tair > 40 | Tair < 12 ~ "Tair_suspect",
     CO2S > 500  ~ "CO2_suspect",
     TRUE ~ "Okay"
   )) |>

@@ -95,9 +95,9 @@ calc_TBI_index <- function(decomp_clean){
   # Calculate tea bag index
   tea_bag_index <- decomp_clean |>
     # remove mislabelled collars
-    filter(!ID %in% c("Pipers _Forested_1", "Pipers _Forested_8", "2k Grass_Open_6",
-    "Aqueduct Grass_Forested_1", "Aqueduct Grass_Open_4")) |>
-    select(collar, tea_type, preburial_weight_g, post_burial_weight_g, recover_date, burial_date) |>
+    # filter(!ID %in% c("Pipers _Forested_1", "Pipers _Forested_8", "2k Grass_Open_6",
+    # "Aqueduct Grass_Forested_1", "Aqueduct Grass_Open_4")) |>
+    select(collar, habitat, site_abbrv, tea_type, preburial_weight_g, post_burial_weight_g, recover_date, burial_date) |>
     # split green and red tea into two columns
     pivot_wider(names_from = tea_type,
                 values_from = c(preburial_weight_g, post_burial_weight_g),
@@ -114,6 +114,15 @@ calc_TBI_index <- function(decomp_clean){
     select(-comment_2_green, -comment_2_red)
 
 }
+
+# Visualise
+ggplot(tea_bag_index |> drop_na(k),
+       aes(x = S, y = k, colour = site_abbrv, fill = site_abbrv)) +
+  geom_point() +
+  scale_colour_viridis_d(option = "B") +
+  facet_grid(~habitat) +
+  # labs(x = "Habitat", y = "Mass loss (g)") +
+  theme_bw()
 
 # # Check data
 # tea_bag_index |>

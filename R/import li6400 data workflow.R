@@ -135,49 +135,7 @@ library(tidylog)
 
 # temp_SR = read.csv("outputs/2024.10.29_LI6400_SR_AllCombined_Dormant.csv")
 
-SR_noOddballs = temp_SR_wide %>%
-  # Filter out non-obs
-  drop_na(EFFLUX) |>
-  # write.csv("outputs/2024.10.29_LI6400_SR_AllCombined_Dormant.csv", row.names = FALSE)
-  separate(remark, into = c("remark.timestamp", "Remarks"), sep = " ") %>%
-  separate(Remarks, into = c("X1", "X2", "X3"), remove = FALSE) %>%
-  # Deciphering each column of the remarks
-  mutate(collarNr = case_when(
-    str_detect(X1, "[:digit:]") ~ X1,
-    TRUE ~ NA)) |>
-  # Deciphering each part of the file name
-  mutate(fileName = basename(File)) |>
-  separate(fileName, into = c("fileDate", "plotNr"), sep = "_") |>
-  separate(plotNr, into = c("siteID", "habitat_abbrv", "understory_abbrv", "rep", "fluxType"),
-           sep = "-",
-           remove = FALSE) |>
-  # Filter to just the averaged efflux (final value)
-  # filter(C2avg == 420) |>
-  # Code other useful variables
-  mutate(habitat = case_when(
-    siteID %in% c("gu", "sp", "2k") & habitat_abbrv == "f" | X2 == "f" ~ "Forested",
-    siteID %in% c("gu", "sp", "2k") & habitat_abbrv == "o" | X2 %in% c("o", "g") ~ "Open",
-    # siteID %in% c("pi") & (X2 == "g" | understory_abbrv == "g") ~ "Open",
-    siteID == "sp" & habitat_abbrv == "g" ~ "Open",
-    siteID == "pi" & X2 == "f" ~ "Forested",
-    siteID == "gu" & fileDate == "2024.10.04" ~ "Open",
-    siteID == "aq" & understory_abbrv == "f" ~ "Forested",
-    siteID == "aq" & understory_abbrv == "o" ~ "Open",
-    TRUE ~ NA
-  ),
-  understory = case_when(
-    understory_abbrv == "g" | X3 == "g" ~ "Grass",
-    understory_abbrv == "s" | X3 == "s" ~ "Shrub",
-    understory_abbrv == "x" | X3 == "x" ~ "unspecified",
-    siteID == "2k" ~ "unspecified",
-    TRUE ~ NA)) |>
-  rename(habitat_remarks = X2, understory_remarks = X3,
-         habitat_file = habitat_abbrv, understory_file = understory_abbrv,
-         plot_file = plotNr, plot_remarks = Remarks, collar_Nr = X1) |>
-  relocate(siteID, plot_file, plot_remarks, fileDate,
-           habitat_file, habitat_remarks, habitat,
-           understory_file, understory_remarks, understory, collar_Nr, .after = Obs)
-
+SR_noOddballs # Check the external script called 'to be merged--plot name cleaning.R'
 write.csv(SR_noOddballs, paste0("outputs/", Sys.Date(), "_LI6400_DataCombined.csv"), row.names = FALSE)
 
 # Visualise the data
@@ -346,6 +304,24 @@ ggplot(SR_noOddballs |> filter(flag_quality != "discard") |>
   # facet_grid(~ habitat) +
   theme_bw()
 
+# Find outliers within sampling rounds ----
+SR_by.round_mean = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  group_by(siteID, campaign, fileDate, plot_remarks) |>
+  select(EFFLUX) |>
+  get_summary_stats(type = "mean") |>
+  select(siteID, campaign, fileDate, plot_remarks, mean)
+
+SR_by.round_variance = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  group_by(siteID, campaign, fileDate, plot_remarks, habitat, understory) |>
+  select(EFFLUX) |>
+  get_summary_stats(type = "mean_sd") |>
+  select(siteID, campaign, fileDate, plot_remarks, habitat, understory, sd) |>
+  full_join(SR_noOddballs |> select(Obs, siteID, campaign, fileDate,
+                                    plot_remarks, habitat, understory, EFFLUX))
+
+
 # Data by site and campaign
 SR_duplicates = SR_noOddballs |>
   filter(flag_quality != "discard") |>
@@ -365,13 +341,26 @@ SR.subset = function(site, campaignID){
     filter(siteID == site) |>
     filter(campaign == campaignID) |>
     relocate(siteID, campaign, flag_quality, .after = collar_remarks) |>
-    relocate(habitat, understory, flag_plot, .after = plot_remarks) |>
+    relocate(collar_nr, habitat, understory, flag_plot, .after = plot_remarks) |>
     arrange(HHMMSS)
 }
 
-SR_site_campaign = SR.subset("sp", "Senescent")
+SR_site_campaign = SR.subset("gu", "Senescent")
 
 SR_sp_dormant = SR.subset("sp", "Dormant")
+
+# Check collar IDs
+SR_collar_na = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  filter(is.na(collar_nr)) |>
+  select(plot_file, plot_remarks, campaign, siteID, habitat, understory, collar_nr)
+
+SR_collar = SR_noOddballs |>
+  filter(flag_quality != "discard") |>
+  group_by(campaign, siteID, habitat, understory, collar_nr) |>
+  summarize(n = length(Obs)) |>
+  filter(n > 3) |>
+  arrange(campaign, siteID, habitat, understory, collar_nr)
 
 # Work with just Aqueduct ----
 library(ggh4x)
